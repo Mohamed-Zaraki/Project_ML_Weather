@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS plots (
     title     TEXT,
     section   TEXT,
     mime      TEXT DEFAULT 'image/png',
-    file_path TEXT,
     image     BLOB,
     UNIQUE (report_id, name)
 );
@@ -150,16 +149,19 @@ class WeatherDB:
             con.close()
 
     # ------------------------------------------------------------------ write
-    def save_report(self, report, replace=True):
+    def save_report(self, report, replace=True, keep_last=None):
         """Store one report (the dict returned by WeatherEDAModel.run()). Returns its report_id.
-        Everything is written in ONE transaction: either the whole report is saved or nothing."""
+        Everything is written in ONE transaction: either the whole report is saved or nothing.
+        keep_last : None (default) keeps every report, so the View can list them all; an int keeps only
+        that many reports PER DATASET (older ones are deleted, each holds ~20 PNGs)."""
         meta = report["meta"]
         rid = meta["report_id"]
         with self._connect() as con:                       # commits on success, rolls back on error
             if replace:
                 con.execute("DELETE FROM reports WHERE report_id = ?", (rid,))   # cascades to children
             con.execute(
-                "INSERT INTO reports VALUES (?,?,?,?,?,?,?)",
+                "INSERT INTO reports (report_id, dataset, generated_at, n_rows, n_cols, date_column, meta_json) "
+                "VALUES (?,?,?,?,?,?,?)",
                 (rid, meta["dataset"], meta["generated_at"], meta.get("n_rows"), meta.get("n_cols"),
                  meta.get("date_column"), json.dumps(meta, ensure_ascii=False)))
 
@@ -175,12 +177,17 @@ class WeatherDB:
 
             for pos, p in enumerate(report.get("plots", [])):
                 con.execute(
-                    "INSERT INTO plots (report_id, position, name, title, section, mime, file_path, image) "
-                    "VALUES (?,?,?,?,?,?,?,?)",
+                    "INSERT INTO plots (report_id, position, name, title, section, mime, image) "
+                    "VALUES (?,?,?,?,?,?,?)",
                     (rid, pos, p["name"], p.get("title"), p.get("section"), p.get("mime", "image/png"),
-                     p.get("file"), self._image_bytes(p)))
+                     self._image_bytes(p)))
 
             self._save_relational(con, rid, report)
+            if keep_last:                                  # prune older runs of the same dataset
+                con.execute(
+                    "DELETE FROM reports WHERE dataset = ? AND report_id NOT IN "
+                    "(SELECT report_id FROM reports WHERE dataset = ? ORDER BY generated_at DESC LIMIT ?)",
+                    (meta["dataset"], meta["dataset"], keep_last))
         return rid
 
     @staticmethod
@@ -193,19 +200,23 @@ class WeatherDB:
     @staticmethod
     def _save_relational(con, rid, report):
         for c in report.get("missing_duplicates", {}).get("missing", {}).get("columns", []):
-            con.execute("INSERT INTO missing_columns VALUES (?,?,?,?)", (rid, c["name"], c["count"], c["percent"]))
+            con.execute("INSERT INTO missing_columns (report_id, feature, count, percent) VALUES (?,?,?,?)", (rid, c["name"], c["count"], c["percent"]))
         for f in report.get("outliers", {}).get("features", []):
-            con.execute("INSERT INTO outlier_stats VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            con.execute("INSERT INTO outlier_stats (report_id, feature, min_value, max_value, q1, q3, iqr, lower_fence, upper_fence, "
+                        "iqr_outliers, iqr_percent, z_outliers, z_percent) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                         (rid, f["feature"], f.get("min"), f.get("max"), f.get("q1"), f.get("q3"), f.get("iqr"),
                          f.get("lower_fence"), f.get("upper_fence"), f.get("iqr_outliers"),
                          f.get("iqr_percent"), f.get("z_outliers"), f.get("z_percent")))
         for f in report.get("noise", {}).get("features", []):
-            con.execute("INSERT INTO noise_features VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            con.execute("INSERT INTO noise_features (report_id, feature, noise_to_signal, snr_db, verdict, von_neumann, lag1_autocorr, "
+                        "spikes, spike_percent, out_of_range, longest_flat_run, stuck_sensor, has_noise, has_errors) "
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                         (rid, f["feature"], f["noise_to_signal"], f["snr_db"], f["verdict"], f["von_neumann"],
                          f["lag1_autocorr"], f["spikes"], f["spike_percent"], f["out_of_range"],
                          f["longest_flat_run"], int(f["stuck_sensor"]), int(f["has_noise"]), int(f["has_errors"])))
         for p in report.get("correlation", {}).get("pairs", []):
-            con.execute("INSERT INTO correlation_pairs VALUES (?,?,?,?,?,?,?)",
+            con.execute("INSERT INTO correlation_pairs (report_id, feature_a, feature_b, pearson, spearman, strength, direction) "
+                        "VALUES (?,?,?,?,?,?,?)",
                         (rid, p["a"], p["b"], p["pearson"], p["spearman"], p["strength"], p["direction"]))
 
     # ------------------------------------------------------------------ read
@@ -236,10 +247,9 @@ class WeatherDB:
                 sec["insights"] = ins.get(r["name"], [])
                 report[r["name"]] = sec
             plots = []
-            for r in con.execute("SELECT name, title, section, mime, file_path, image FROM plots "
+            for r in con.execute("SELECT name, title, section, mime, image FROM plots "
                                  "WHERE report_id = ? ORDER BY position", (report_id,)):
-                p = {"name": r["name"], "title": r["title"], "section": r["section"],
-                     "file": r["file_path"], "mime": r["mime"]}
+                p = {"name": r["name"], "title": r["title"], "section": r["section"], "mime": r["mime"]}
                 if include_images and r["image"] is not None:
                     p["base64"] = base64.b64encode(r["image"]).decode()
                 plots.append(p)
@@ -295,5 +305,3 @@ if __name__ == "__main__":
     db = WeatherDB(sys.argv[2] if len(sys.argv) > 2 else "weather.db")
     rid = db.save_report(report)
     print("Saved report", rid, "->", db.db_path)
-
-    

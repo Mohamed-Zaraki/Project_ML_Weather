@@ -1,27 +1,38 @@
-# Rapports Datasets
+# Analyse météo : modèle, base SQLite et application Streamlit
 
-Tableau de bord Streamlit pour lire, visualiser et conserver des rapports de datasets au format JSON.
+Architecture MVC : le **Model** calcule et stocke, la **vue** affiche.
 
-## Lancer
+| Fichier | Rôle |
+|---|---|
+| `weather_model.py` | Model : analyse complète de `weatherHistory.csv` (description, manquants, extrêmes, bruit, tendances, corrélations, distributions, modèle Random Forest). |
+| `quality.py` | Règles de qualité partagées (plages physiques, seuils de bruit, nettoyage). |
+| `weather_db.py` | Stockage SQLite (`weather.db`) : un rapport = JSON par section + graphiques PNG. Chaque exécution **ajoute** un rapport. |
+| `weather_view.py` | Vue en lecture seule d'un rapport (un onglet par section). |
+| `app.py` | Application : la barre latérale liste tous les rapports enregistrés, le rapport choisi s'affiche. |
+| `theme.py` | Habillage visuel. |
+
+## Lancer l'application
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Utilisation
+Autre base : `WEATHER_DB=/chemin/weather.db streamlit run app.py`.
 
-- **Importer** : déposer un ou plusieurs fichiers `.json` dans le panneau de gauche, ou utiliser « Coller du JSON ».
-- **Enregistrement** : chaque rapport est stocké dans `data/rapports.db` (SQLite). À chaque ouverture, tous les rapports enregistrés sont listés et le dernier consulté s'affiche.
-- **Visualisation** : l'onglet Aperçu repère automatiquement les valeurs simples (chiffres clés), les listes de nombres (histogramme), les objets de nombres (barres), les listes d'objets et les objets d'objets (tableaux avec graphique par colonne). Les onglets Structure et JSON brut montrent le contenu exact.
-- **Suppression** : bouton « Supprimer ce rapport » sous la liste, avec confirmation.
+## Créer un nouveau rapport
 
-## Source météo (weather.db)
+```bash
+pip install -r requirements-model.txt
+python weather_db.py weatherHistory.csv weather.db
+```
 
-Le sélecteur **Source** de la barre latérale bascule entre les rapports JSON et le rapport météo du Model (`weather.db`), affiché en lecture seule par `weather_view.py` via `weather_db.WeatherDB` : un onglet par section (description, manquants, extrêmes, bruit, tendances, corrélations, distributions), avec insights, tableaux et images.
+Le rapport est ajouté à `weather.db` ; dans l'application, « Actualiser la liste » le fait apparaître.
+Pour ne garder que les N derniers rapports d'un dataset : `db.save_report(report, keep_last=N)`.
 
-- Fichiers à placer à côté de `app.py` : `weather_view.py`, `weather_db.py`, `weather.db` (autre chemin : `WEATHER_DB=/chemin/weather.db`).
-- **Ajouter aux rapports JSON** copie le rapport (sans images) dans `rapports.db`. En ligne de commande : `python export_weather_json.py weather.db sortie.json`, puis import du fichier.
-- Vue seule : `streamlit run weather_view.py`.
+## Notes sur la phase modèle
 
-Pour utiliser une autre base de données : `RAPPORTS_DB=/chemin/vers/fichier.db streamlit run app.py`.
+- Cible `Precip Type`, très déséquilibrée : `class_weight="balanced"`, on lit l'exactitude **équilibrée** et le F1.
+- Évaluation sur une coupure **temporelle** (75 % passé / 25 % récent).
+- Importance par **permutation** sur la période de test (plus fiable que l'impureté quand `Temperature` et `Apparent Temperature` sont presque identiques).
+- Sur ce jeu, `Precip Type` suit une règle de température (neige si T ≤ 0 °C, pluie sinon) : le score est parfait et la prédiction triviale.

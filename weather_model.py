@@ -40,6 +40,11 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.inspection import permutation_importance
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score, recall_score
+
+from quality import (SPIKE_K, SPIKE_PCT_FLAG, SPIKE_MIN_FRAC, STUCK_RUN, NSR_LEVELS, CIRCULAR_KEYS,
+                     robust_sigma, physical_range, mask_impossible)
 
 MONTH_STYLE = {                             # from your plot_month / label_color code
     1: ("January", "blue"),    2: ("February", "green"),   3: ("March", "orange"),
@@ -47,35 +52,6 @@ MONTH_STYLE = {                             # from your plot_month / label_color
     7: ("July", "purple"),     8: ("August", "black"),     9: ("September", "brown"),
     10: ("October", "darkblue"), 11: ("November", "grey"), 12: ("December", "pink"),
 }
-
-
-# ---- noise-detection settings
-SPIKE_K = 4                      # spike = more than 4 robust sigmas from the rolling median
-SPIKE_PCT_FLAG = 1.0             # a feature counts as noisy if more than 1% of its points are spikes
-SPIKE_MIN_FRAC = 0.5             # ...and also > 50% of the feature's normal spread
-CIRCULAR_KEYS = ("bearing",)      # circular variables: linear noise tests do not apply
-STUCK_RUN = 24                   # >= 24 identical consecutive readings = stuck sensor
-NSR_LEVELS = (0.05, 0.15, 0.35)  # verdict thresholds: negligible / low / moderate / high
-PHYSICAL_RANGES = {              # (min, max) physically possible values, matched on column name
-    "temperature": (-90, 60), "humidity": (0, 1), "pressure": (850, 1090),
-    "wind speed": (0, 150), "wind bearing": (0, 360), "visibility": (0, 100),
-}
-
-
-def robust_sigma(x):
-    """Std estimate from the median absolute deviation (ignores outliers)."""
-    x = np.asarray(x, dtype=float)
-    return float(1.4826 * np.median(np.abs(x - np.median(x)))) if len(x) else 0.0
-
-
-def physical_range(col, s):
-    name = col.lower()
-    for key, rng in PHYSICAL_RANGES.items():
-        if key in name:
-            if key == "humidity" and s.quantile(.99) > 1.5:      # humidity stored as percent
-                return (0, 100)
-            return rng
-    return None
 
 
 # ------------------------------------------------------------------ utils
@@ -109,12 +85,13 @@ def slug(text):
 
 # ------------------------------------------------------------------ model
 class WeatherEDAModel:
-    def __init__(self, csv_path, out_dir="eda_output", category_col="Summary",
+    def __init__(self, csv_path, out_dir="eda_output", category_col="Summary", target_col="Precip Type",
                  top_categories=8, dpi=150, embed_base64=True):
         self.csv_path = Path(csv_path)
         self.out_dir = Path(out_dir)
         self.plots_dir = self.out_dir / "plots"
         self.category_col = category_col
+        self.target_col = target_col
         self.top_categories = top_categories
         self.dpi = dpi
         self.embed_base64 = embed_base64
@@ -143,15 +120,7 @@ class WeatherEDAModel:
         self.cat_cols = df.select_dtypes(exclude="number").columns.tolist()
         # df_valid = same data with physically impossible readings set to NaN (e.g. pressure = 0).
         # Outliers, correlation, KDE and monthly analysis use it so bad readings cannot distort them.
-        self.df_valid = df.copy()
-        self.invalid_counts = {}
-        for c in self.num_cols:
-            rng = physical_range(c, df[c].dropna())
-            if rng:
-                bad = (df[c] < rng[0]) | (df[c] > rng[1])
-                if bad.any():
-                    self.df_valid.loc[bad, c] = np.nan
-                    self.invalid_counts[c] = int(bad.sum())
+        self.df_valid, self.invalid_counts = mask_impossible(df)
         # key features used by the assignment snippets (fallback: first numeric cols)
         pref = [c for c in ("Temperature (C)", "Humidity") if c in self.num_cols]
         self.key_feats = pref + [c for c in self.num_cols if c not in pref][: 2 - len(pref)]
@@ -179,7 +148,7 @@ class WeatherEDAModel:
     def describe(self):
         buf = io.StringIO()
         self.raw.info(buf=buf)
-        desc_num = self.df[self.num_cols + self.constant_cols].describe().T
+        desc_num = self.df_valid[self.num_cols + self.constant_cols].describe().T   # valid readings only (pressure = 0 would give std 117)
         desc_num["skew_valid"] = self.df_valid[desc_num.index].skew()
         desc_num["kurtosis_valid"] = self.df_valid[desc_num.index].kurt()
         desc_cat = self.df[self.cat_cols].describe().T if self.cat_cols else pd.DataFrame()
@@ -520,12 +489,6 @@ class WeatherEDAModel:
             )
             m.index.name = "month"
             monthly[c] = records(m.reset_index())
-            fig, ax = plt.subplots(figsize=(12, 4.5))
-            ax.plot(m.index, m["mean"], color="#8C572A", lw=1.8, label="monthly mean")
-            ax.fill_between(m.index, m["low"], m["high"], color="#8C572A", alpha=.2, label="10th-90th percentile")
-            ax.set_title(f"{c} - monthly mean with 10-90% band")
-            ax.legend()
-            self._save_plot(fig, f"monthly_band_{slug(c)}", f"Monthly band - {c}", "monthly_trends")
         out["monthly_stats"] = monthly
 
         season = {}
@@ -664,243 +627,151 @@ class WeatherEDAModel:
                                "median markers, to show distribution shape.",
                 "features": feats, "skipped": skipped, "insights": insights}
 
-    # ---------------------------------------------------------- 7. model phase (Precip Type balance, preprocessing, RF importance)
+    # ---------------------------------------------------------- 7. model phase (target balance, preprocessing, RF + evaluation)
     def model_phase(self):
-        """Analyzes class balance of 'Precip Type', builds a ColumnTransformer + Pipeline
-        for numerical & categorical preprocessing, and trains a RandomForestClassifier
-        to determine feature importance."""
-        target_col = "Precip Type"
+        """Class balance of the target, sklearn preprocessing (Pipeline + ColumnTransformer) and a
+        RandomForestClassifier evaluated on a TIME-BASED hold-out (last 25% of the series), with both
+        impurity and permutation importances. Works on the cleaned data (impossible readings -> NaN)."""
+        target_col = self.target_col
+        desc = ("Model phase: target class balance, preprocessing with sklearn Pipeline + ColumnTransformer, "
+                "Random Forest evaluated on a time-based hold-out, and feature importance (impurity and permutation).")
+        if target_col not in self.df.columns:
+            return {"description": desc, "insights": [f"Target column '{target_col}' not found - model phase skipped."]}
         insights = []
 
-        # (1) Class balance analysis
-        s_target = self.raw[target_col] if target_col in self.raw.columns else self.df[target_col]
+        # (1) Class balance (all rows, including missing)
+        s_target = self.df[target_col]
         total_samples = len(s_target)
-        val_counts = s_target.value_counts(dropna=False)
         nan_count = int(s_target.isna().sum())
-
-        class_counts = {}
-        class_pcts = {}
-        for k, v in val_counts.items():
-            k_name = "Missing / Not recorded" if pd.isna(k) else str(k)
-            class_counts[k_name] = int(v)
-            class_pcts[k_name] = round(float(v) / total_samples * 100, 2)
-
-        # Non-null class balance
+        class_counts, class_pcts = {}, {}
+        for k, v in s_target.value_counts(dropna=False).items():
+            name = "Missing / Not recorded" if pd.isna(k) else str(k)
+            class_counts[name] = int(v)
+            class_pcts[name] = round(float(v) / total_samples * 100, 2)
         non_null_counts = s_target.dropna().value_counts()
-        is_balanced = False
-        imbalance_ratio = None
+        imbalance_ratio, is_balanced = None, False
         if len(non_null_counts) >= 2:
-            maj_count = float(non_null_counts.iloc[0])
-            min_count = float(non_null_counts.iloc[1])
-            imbalance_ratio = round(maj_count / max(min_count, 1), 2)
-            # Imbalance threshold: > 1.5 ratio or majority > 60%
+            imbalance_ratio = round(float(non_null_counts.iloc[0]) / max(float(non_null_counts.iloc[1]), 1), 2)
             is_balanced = bool(imbalance_ratio <= 1.5)
+        severity = ("not measurable" if imbalance_ratio is None else "severely imbalanced" if imbalance_ratio >= 5
+                    else "imbalanced" if imbalance_ratio > 1.5 else "balanced")
+        listing = ", ".join(f"'{k}': {v:,} ({class_pcts[k]:.1f}%)" for k, v in class_counts.items())
+        insights.append(f"Class balance on '{target_col}': {severity}. {listing}.")
+        if imbalance_ratio and not is_balanced:
+            insights.append(f"Imbalance ratio {imbalance_ratio}:1 - without class weighting a model would be biased "
+                            "towards the majority class, so class_weight='balanced' is used and balanced accuracy / F1 "
+                            "are reported instead of accuracy alone.")
 
-        # Plot 1: Target balance plot
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5), gridspec_kw={"width_ratios": [1.4, 1]})
-        
-        categories = list(class_counts.keys())
-        counts = list(class_counts.values())
-        colors = ["#2878B5" if c == "rain" else "#20A387" if c == "snow" else "#BD4A32" for c in categories]
-        
-        bars = ax1.bar(categories, counts, color=colors, width=0.55, edgecolor="#18324B", linewidth=1.2)
-        ax1.set_title(f"Class Balance: '{target_col}' (Severe Imbalance)", fontsize=13, fontweight="bold", pad=12)
-        ax1.set_ylabel("Number of Observations", fontsize=11)
-        ax1.set_xlabel("Precipitation Class", fontsize=11)
-        ax1.grid(axis="y", linestyle="--", alpha=0.6)
-        ax1.spines["top"].set_visible(False)
-        ax1.spines["right"].set_visible(False)
-
-        for bar, cat in zip(bars, categories):
-            yval = bar.get_height()
-            pct = class_pcts[cat]
-            ax1.text(bar.get_x() + bar.get_width() / 2.0, yval + (total_samples * 0.015),
-                     f"{yval:,}\n({pct}%)", ha="center", va="bottom", fontsize=10, fontweight="bold")
-        ax1.set_ylim(0, max(counts) * 1.18)
-
-        # Pie chart on ax2
-        wedges, texts, autotexts = ax2.pie(
-            counts, labels=categories, autopct="%1.1f%%", startangle=140,
-            colors=colors, wedgeprops={"edgecolor": "white", "linewidth": 2, "width": 0.6}
-        )
-        for autotext in autotexts:
-            autotext.set_fontweight("bold")
-            autotext.set_fontsize(10)
-        ax2.set_title(f"Proportional Share\n(Imbalance Ratio ~ {imbalance_ratio}:1)", fontsize=12, fontweight="bold")
-
-        fig.suptitle(f"Target Feature Analysis: '{target_col}' Distribution", fontsize=14, fontweight="bold", y=1.02)
-        self._save_plot(fig, "precip_type_balance", f"Class Balance - {target_col}", "model_phase")
-
-        # Insights on class balance
-        rain_cnt = class_counts.get("rain", 0)
-        snow_cnt = class_counts.get("snow", 0)
+        # (2) Preprocessing, on CLEANED data (physically impossible readings are NaN -> median-imputed)
+        d = self.df_valid[self.df_valid[target_col].notna()]
+        num_features = list(self.num_cols)
+        cat_features = [self.category_col] if self.category_col in d.columns else []
+        X, y = d[num_features + cat_features], d[target_col].astype(str)
+        num_pipeline = Pipeline([("imputer", SimpleImputer(strategy="median")), ("scaler", StandardScaler())])
+        cat_pipeline = Pipeline([("imputer", SimpleImputer(strategy="most_frequent")),
+                                 ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False))])
+        preprocessor = ColumnTransformer([("num", num_pipeline, num_features), ("cat", cat_pipeline, cat_features)],
+                                         remainder="drop")
         insights.append(
-            f"Class balance on '{target_col}': the dataset is SEVERELY IMBALANCED. "
-            f"'rain' has {rain_cnt:,} instances ({class_pcts.get('rain', 0):.1f}%), while 'snow' has "
-            f"{snow_cnt:,} instances ({class_pcts.get('snow', 0):.1f}%), and {nan_count} missing values ({class_pcts.get('Missing / Not recorded', 0):.2f}%)."
-        )
-        if imbalance_ratio:
-            insights.append(
-                f"Imbalance ratio: approximately {imbalance_ratio}:1 (rain vs snow). "
-                "Because of this severe skew, models trained without class weighting would suffer from majority class bias."
-            )
+            f"Preprocessing: {len(num_features)} numerical features {num_features} and {len(cat_features)} categorical "
+            f"feature(s) {cat_features}; ColumnTransformer = numerical Pipeline (median imputation + StandardScaler) "
+            "+ categorical Pipeline (most-frequent imputation + OneHotEncoder). Impossible readings "
+            f"({sum(self.invalid_counts.values())} cells) are treated as missing, not as real values.")
 
-        # (2) Preprocessing: Divide into Numerical & Categorical data
-        valid_mask = s_target.notna()
-        df_model = self.raw[valid_mask].copy()
-        y = df_model[target_col]
+        # (3) Time-based split: train on the past, test on the most recent 25% (hourly data is autocorrelated,
+        #     a random split would leak neighbouring hours between train and test)
+        n_test = max(1, int(len(d) * 0.25))
+        n_train = len(d) - n_test
+        Xtr, Xte, ytr, yte = X.iloc[:n_train], X.iloc[n_train:], y.iloc[:n_train], y.iloc[n_train:]
 
-        candidate_num = [
-            "Temperature (C)", "Apparent Temperature (C)", "Humidity",
-            "Wind Speed (km/h)", "Wind Bearing (degrees)", "Visibility (km)",
-            "Pressure (millibars)"
-        ]
-        num_features = [c for c in candidate_num if c in df_model.columns]
-        cat_features = [c for c in ["Summary"] if c in df_model.columns]
+        def span(idx):
+            return f"{idx.min():%Y-%m-%d} to {idx.max():%Y-%m-%d}" if self.date_col else f"rows {idx.min()}-{idx.max()}"
 
-        X = df_model[num_features + cat_features]
+        rf = RandomForestClassifier(n_estimators=100, max_depth=16, random_state=42, n_jobs=-1,
+                                    class_weight="balanced")
+        pipe = Pipeline([("preprocessor", preprocessor), ("classifier", rf)]).fit(Xtr, ytr)
+        pred = pipe.predict(Xte)
+        classes = sorted(y.unique())
+        acc = float(accuracy_score(yte, pred))
+        bal = float(balanced_accuracy_score(yte, pred))
+        f1 = float(f1_score(yte, pred, average="macro", zero_division=0))
+        baseline = float((yte == ytr.mode().iloc[0]).mean())
+        recalls = recall_score(yte, pred, labels=classes, average=None, zero_division=0)
+        evaluation = {
+            "split": "time-based hold-out (train = first 75%, test = last 25%)",
+            "n_train": int(n_train), "n_test": int(n_test),
+            "train_period": span(Xtr.index), "test_period": span(Xte.index),
+            "accuracy": acc, "balanced_accuracy": bal, "f1_macro": f1, "baseline_accuracy": baseline,
+            "per_class_recall": {c: float(r) for c, r in zip(classes, recalls)},
+        }
+        insights.append(f"Hold-out evaluation ({evaluation['test_period']}): accuracy {acc:.3f} (always predicting the "
+                        f"majority class gives {baseline:.3f}), balanced accuracy {bal:.3f}, macro F1 {f1:.3f}.")
+        if bal >= 0.995:
+            insights.append("Near-perfect score: check that no feature gives away the target (data leakage).")
 
-        # Sklearn Pipeline and ColumnTransformer
-        num_pipeline = Pipeline([
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", StandardScaler()),
-        ])
-
-        cat_pipeline = Pipeline([
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-        ])
-
-        preprocessor = ColumnTransformer(
-            transformers=[
-                ("num", num_pipeline, num_features),
-                ("cat", cat_pipeline, cat_features),
-            ],
-            remainder="drop"
-        )
-
-        insights.append(
-            f"Preprocessing: divided dataset into {len(num_features)} numerical features {num_features} "
-            f"and {len(cat_features)} categorical feature(s) {cat_features}. "
-            "Built a ColumnTransformer combining a numerical Pipeline (median imputation + StandardScaler) "
-            "and a categorical Pipeline (most-frequent imputation + OneHotEncoder)."
-        )
-
-        # (3) Random Forest Feature Importance Phase
-        rf = RandomForestClassifier(
-            n_estimators=100,
-            max_depth=16,
-            random_state=42,
-            n_jobs=-1,
-            class_weight="balanced"
-        )
-
-        full_pipeline = Pipeline([
-            ("preprocessor", preprocessor),
-            ("classifier", rf),
-        ])
-
-        full_pipeline.fit(X, y)
-
-        trans_names = list(full_pipeline.named_steps["preprocessor"].get_feature_names_out())
-        raw_importances = full_pipeline.named_steps["classifier"].feature_importances_
-
-        cleaned_trans_names = [
-            re.sub(r"^(num__|cat__)", "", name) for name in trans_names
-        ]
-
-        orig_importances = {feat: 0.0 for feat in (num_features + cat_features)}
-        for raw_name, imp in zip(trans_names, raw_importances):
-            found = False
-            for orig in num_features + cat_features:
-                if raw_name.startswith(f"num__{orig}") or raw_name.startswith(f"cat__{orig}"):
-                    orig_importances[orig] += float(imp)
-                    found = True
+        # (4) Importances: impurity (train fit) and permutation (on the unseen test period)
+        names = list(pipe.named_steps["preprocessor"].get_feature_names_out())
+        raw_imp = pipe.named_steps["classifier"].feature_importances_
+        feats = num_features + cat_features
+        orig = {f: 0.0 for f in feats}
+        for nm, imp in zip(names, raw_imp):
+            for f in feats:
+                if nm.startswith(f"num__{f}") or nm.startswith(f"cat__{f}"):
+                    orig[f] += float(imp)
                     break
-            if not found:
-                orig_importances[raw_name] = float(imp)
+        impurity = [{"rank": i + 1, "feature": f, "importance": round(v, 4), "percentage": round(v * 100, 2)}
+                    for i, (f, v) in enumerate(sorted(orig.items(), key=lambda kv: -kv[1]))]
+        transformed = [{"rank": i + 1, "feature": re.sub(r"^(num__|cat__)", "", nm), "importance": round(float(v), 4),
+                        "percentage": round(float(v) * 100, 2)}
+                       for i, (nm, v) in enumerate(sorted(zip(names, raw_imp), key=lambda x: -x[1]))]
+        pi = permutation_importance(pipe, Xte, yte, scoring="balanced_accuracy", n_repeats=3,
+                                    random_state=42, n_jobs=-1)
+        order = np.argsort(-pi.importances_mean)
+        permutation = [{"rank": r + 1, "feature": Xte.columns[j], "drop_points": round(float(pi.importances_mean[j]) * 100, 2),
+                        "std_points": round(float(pi.importances_std[j]) * 100, 2)} for r, j in enumerate(order)]
+        insights.append(f"Permutation importance (drop in balanced accuracy when a feature is shuffled on the test period): "
+                        f"'{permutation[0]['feature']}' {permutation[0]['drop_points']:.1f} pts"
+                        + (f", then '{permutation[1]['feature']}' {permutation[1]['drop_points']:.1f} pts." if len(permutation) > 1 else "."))
+        top = impurity[:2]
+        insights.append(f"Impurity importance (Random Forest splits): '{top[0]['feature']}' {top[0]['percentage']:.1f}%"
+                        + (f", '{top[1]['feature']}' {top[1]['percentage']:.1f}%." if len(top) > 1 else "."))
+        if len(top) > 1 and all(t["feature"] in self.num_cols for t in top):
+            r = float(self.df_valid[top[0]["feature"]].corr(self.df_valid[top[1]["feature"]]))
+            if abs(r) >= 0.9:
+                insights.append(f"'{top[0]['feature']}' and '{top[1]['feature']}' are almost the same signal (r = {r:.2f}): "
+                                "impurity importance splits the credit between them, so read them together.")
 
-        sorted_orig = sorted(orig_importances.items(), key=lambda item: -item[1])
-        orig_ranking = [
-            {"rank": i + 1, "feature": feat, "importance": round(imp, 4),
-             "percentage": round(imp * 100, 2)}
-            for i, (feat, imp) in enumerate(sorted_orig)
-        ]
-
-        sorted_trans = sorted(zip(cleaned_trans_names, raw_importances), key=lambda x: -x[1])
-        trans_ranking = [
-            {"rank": i + 1, "feature": name, "importance": round(float(imp), 4),
-             "percentage": round(float(imp) * 100, 2)}
-            for i, (name, imp) in enumerate(sorted_trans)
-        ]
-
-        # Plot 2: Feature Importance Plot
-        fig, ax = plt.subplots(figsize=(10, 6), constrained_layout=True)
-        feats_plot = [r["feature"] for r in orig_ranking][::-1]
-        imps_plot = [r["importance"] * 100 for r in orig_ranking][::-1]
-        
-        norm_vals = np.linspace(0.3, 0.95, len(feats_plot))
-        bar_colors = [plt.cm.Blues(v) for v in norm_vals]
-
-        hbars = ax.barh(feats_plot, imps_plot, color=bar_colors, edgecolor="#18324B", linewidth=0.8, height=0.6)
-        ax.set_title("Random Forest Feature Importance (Target: Precip Type)", fontsize=13, fontweight="bold", loc="left", pad=12)
-        ax.set_xlabel("Relative Importance (%)", fontsize=10, fontweight="bold")
-        ax.grid(axis="x", linestyle="--", alpha=0.6)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.set_xlim(0, max(imps_plot) * 1.15)
-
-        for bar in hbars:
-            width = bar.get_width()
-            ax.text(width + 0.8, bar.get_y() + bar.get_height() / 2.0,
-                    f"{width:.1f}%", va="center", ha="left", fontsize=9.5, fontweight="bold", color="#18324B")
-
-        self._save_plot(fig, "rf_feature_importance", "Feature Importance (Random Forest)", "model_phase")
-
-        top1 = sorted_orig[0]
-        top2 = sorted_orig[1] if len(sorted_orig) > 1 else None
-        top_msg = f"Top predictor: '{top1[0]}' contributes {top1[1] * 100:.1f}% of the decision tree splits."
-        if top2:
-            top_msg += f" Combined with '{top2[0]}' ({top2[1] * 100:.1f}%), temperature metrics account for {(top1[1] + top2[1]) * 100:.1f}% of total feature importance."
-        insights.append(top_msg)
-        insights.append(
-            "Meteorological interpretation: whether precipitation falls as rain or snow is almost entirely "
-            "governed by atmospheric temperature and apparent temperature around the freezing point (0°C), "
-            "while humidity, pressure, and visibility provide minor secondary signals."
-        )
+        # leakage hint: category values that name the target (e.g. 'Rain', 'Snow') and are almost pure
+        for cf in cat_features:
+            hit = d[cf].astype(str).str.contains(r"rain|snow|drizzle|sleet|flurr", case=False, regex=True)
+            if hit.any():
+                purity = d[hit].groupby(cf)[target_col].agg(lambda s: s.value_counts(normalize=True).iloc[0])
+                share = float(d[cf].isin(purity[purity >= 0.95].index).mean() * 100)
+                if share >= 1:
+                    insights.append(f"Possible leakage: {share:.1f}% of rows have a '{cf}' value that names precipitation "
+                                    f"and almost determines '{target_col}' (>= 95% one class). Compare with a model without '{cf}'.")
 
         return {
-            "description": "Model phase: analysis of target class balance ('Precip Type'), "
-                           "data preprocessing using sklearn Pipeline and ColumnTransformer, "
-                           "and Random Forest feature importance ranking.",
+            "description": desc,
             "target_balance": {
-                "target_feature": target_col,
-                "is_balanced": is_balanced,
-                "imbalance_ratio": imbalance_ratio,
-                "total_observations": total_samples,
-                "valid_observations": int(len(df_model)),
-                "missing_count": nan_count,
-                "class_counts": class_counts,
-                "class_percentages": class_pcts,
+                "target_feature": target_col, "is_balanced": is_balanced, "imbalance_ratio": imbalance_ratio,
+                "severity": severity, "total_observations": total_samples, "valid_observations": int(len(d)),
+                "missing_count": nan_count, "class_counts": class_counts, "class_percentages": class_pcts,
             },
             "preprocessing": {
-                "numerical_features": num_features,
-                "categorical_features": cat_features,
-                "target_feature": target_col,
+                "numerical_features": num_features, "categorical_features": cat_features, "target_feature": target_col,
                 "numerical_pipeline": ["SimpleImputer(strategy='median')", "StandardScaler()"],
                 "categorical_pipeline": ["SimpleImputer(strategy='most_frequent')", "OneHotEncoder(handle_unknown='ignore')"],
                 "transformer_method": "ColumnTransformer",
-                "total_input_features": len(num_features) + len(cat_features),
-                "total_transformed_features": len(trans_names),
-                "samples_trained": int(len(df_model)),
+                "total_input_features": len(feats), "total_transformed_features": len(names),
+                "samples_trained": int(n_train),
             },
+            "evaluation": evaluation,
             "feature_importance": {
-                "model": "RandomForestClassifier",
-                "n_estimators": 100,
-                "class_weight": "balanced",
-                "random_state": 42,
-                "ranked_features": orig_ranking,
-                "detailed_transformed_ranking": trans_ranking[:15],
+                "model": "RandomForestClassifier", "n_estimators": 100, "max_depth": 16,
+                "class_weight": "balanced", "random_state": 42,
+                "ranked_features": impurity, "permutation_ranking": permutation,
+                "detailed_transformed_ranking": transformed[:15],
             },
             "insights": insights,
         }

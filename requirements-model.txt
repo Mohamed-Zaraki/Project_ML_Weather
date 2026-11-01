@@ -1,0 +1,6 @@
+# Pour générer un rapport : python weather_db.py weatherHistory.csv weather.db
+-r requirements.txt
+scikit-learn>=1.4.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+scipy>=1.10.0
