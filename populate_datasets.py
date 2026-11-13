@@ -1,4 +1,4 @@
-"""populate_datasets.py - Ingests all extracted datasets into weather.db.
+"""populate_datasets.py - Ingests all extracted datasets into data.db.
 """
 from __future__ import annotations
 
@@ -11,8 +11,9 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-DB_PATH = pathlib.Path(r"c:\Users\Moham\Documents\GitHub\Sumestre_7_TP\ML_SUM_7\Project_ML_Weather\weather.db")
-EXTRACTED_ROOT = pathlib.Path(r"c:\Users\Moham\Documents\GitHub\Sumestre_7_TP\ML_SUM_7\Project_ML_Weather\datasets_extracted")
+ROOT = pathlib.Path(__file__).resolve().parent
+DB_PATH = ROOT / "data.db"
+EXTRACTED_ROOT = ROOT / "datasets_extracted"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS datasets (

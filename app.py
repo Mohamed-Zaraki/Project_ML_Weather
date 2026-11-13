@@ -1,12 +1,12 @@
 """app.py : application Streamlit d'analyse météo.
 
 Phase 0 - Vue d'ensemble   : importer, sauvegarder et explorer les datasets.
-Phase 1+ - Rapports EDA    : afficher les rapports enregistres dans weather.db.
+Phase 1+ - Rapports EDA    : afficher les rapports enregistres dans data.db.
 
 La barre laterale permet de naviguer entre les deux phases.
 
 Lancer :  streamlit run app.py
-Autre base : WEATHER_DB=/chemin/weather.db streamlit run app.py
+Autre base : DATA_DB=/chemin/data.db streamlit run app.py
 """
 from __future__ import annotations
 

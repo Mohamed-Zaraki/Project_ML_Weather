@@ -6,7 +6,7 @@ Ce document est destiné à ton collaborateur en charge des couches **View** et 
 
 ## 1. Ce qui a été préparé et stocké dans le Model
 
-La phase de modélisation a été exécutée et enregistrée dans [`weather.db`](file:///c:/Users/Moham/Desktop/files/weather.db).
+La phase de modélisation a été exécutée et enregistrée dans [`data.db`](file:///c:/Users/Moham/Desktop/files/data.db).
 
 ### Clé de section : `"model_phase"`
 Les données structurées et les graphiques sont accessibles via la section `"model_phase"`.
@@ -135,7 +135,7 @@ Le rôle du Contrôleur est de faire le lien entre le stockage SQLite / JSON et 
 ```python
 from weather_db import WeatherDB
 
-db = WeatherDB("weather.db", read_only=True)
+db = WeatherDB("data.db", read_only=True)
 rid = db.latest_report_id()
 
 # Obtenir uniquement la section model_phase
@@ -175,7 +175,7 @@ if st.sidebar.button("Relancer l'entraînement RF"):
     with st.spinner("Entraînement en cours..."):
         model = WeatherEDAModel("weatherHistory.csv")
         new_report = model.run()
-        db = WeatherDB("weather.db")
+        db = WeatherDB("data.db")
         new_rid = db.save_report(new_report)
         st.sidebar.success(f"Nouveau rapport enregistré : {new_rid}")
         st.rerun()
@@ -185,7 +185,7 @@ if st.sidebar.button("Relancer l'entraînement RF"):
 
 ## 4. Fichiers disponibles dans le projet
 - [`weather_model.py`](file:///c:/Users/Moham/Desktop/files/weather_model.py) : Code source du Model (avec déséquilibre, Pipeline, ColumnTransformer, RF).
-- [`weather.db`](file:///c:/Users/Moham/Desktop/files/weather.db) : Base SQLite contenant les tables `reports`, `sections`, `insights`, `plots` (images PNG BLOB).
+- [`data.db`](file:///c:/Users/Moham/Desktop/files/data.db) : Base SQLite contenant les tables `datasets`, `reports`, `sections`, `insights`, `plots` (images PNG BLOB).
 - [`latest_weather_report.json`](file:///c:/Users/Moham/Desktop/files/latest_weather_report.json) : Export JSON complet prêt à l'import dans `app.py`.
 - [`weather_view.py`](file:///c:/Users/Moham/Desktop/files/weather_view.py) : Composant de visualisation (intact, prêt pour tes ajouts).
 - [`app.py`](file:///c:/Users/Moham/Desktop/files/app.py) : Tableau de bord principal Streamlit.

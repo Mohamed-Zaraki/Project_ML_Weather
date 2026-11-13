@@ -1,0 +1,4294 @@
+{
+  "meta": {
+    "report_id": "parkinson_20261113_121938",
+    "dataset_name": "parkinson",
+    "dataset_label": "Parkinson's Disease",
+    "dataset_description": "",
+    "csv_path": "datasets_extracted\\parkinson\\parkinson\\data1.csv",
+    "generated_at": "2026-11-13T12:19:38",
+    "n_rows": 584,
+    "n_cols": 15,
+    "numeric_columns": [
+      "A-beta",
+      "alpha-syn",
+      "p-tau",
+      "T-tau",
+      "P-tau/A-beta",
+      "T-tau/A-beta",
+      "P-tau/t-tau",
+      "UPSIT",
+      "REMBDSQ",
+      "CAUDATE_R",
+      "CAUDATE_L",
+      "PUTAMEN_R",
+      "PUTAMEN_L"
+    ],
+    "continuous_columns": [
+      "A-beta",
+      "alpha-syn",
+      "p-tau",
+      "T-tau",
+      "P-tau/A-beta",
+      "T-tau/A-beta",
+      "P-tau/t-tau",
+      "UPSIT",
+      "REMBDSQ",
+      "CAUDATE_R",
+      "CAUDATE_L",
+      "PUTAMEN_R",
+      "PUTAMEN_L"
+    ],
+    "categorical_columns": [],
+    "target_column": "Group (Normal/PD/SWEDD - 1/2/3)",
+    "impossible_values_masked": {},
+    "contradictory_rows": 8,
+    "contradictory_rows_percent": 1.37
+  },
+  "description": {
+    "description": "Structure of the dataset: dtypes / non-null counts, first rows, summary statistics, skewness, kurtosis, cardinality and categorical value counts.",
+    "dataset_description": "",
+    "info": {
+      "text": "<class 'pandas.core.frame.DataFrame'>\nRangeIndex: 584 entries, 0 to 583\nData columns (total 15 columns):\n #   Column                           Non-Null Count  Dtype  \n---  ------                           --------------  -----  \n 0   Subject_id                       584 non-null    int64  \n 1   A-beta                           584 non-null    float64\n 2   alpha-syn                        584 non-null    float64\n 3   p-tau                            584 non-null    float64\n 4   T-tau                            584 non-null    float64\n 5   P-tau/A-beta                     584 non-null    float64\n 6   T-tau/A-beta                     584 non-null    float64\n 7   P-tau/t-tau                      584 non-null    float64\n 8   UPSIT                            584 non-null    int64  \n 9   REMBDSQ                          584 non-null    int64  \n 10  CAUDATE_R                        584 non-null    float64\n 11  CAUDATE_L                        584 non-null    float64\n 12  PUTAMEN_R                        584 non-null    float64\n 13  PUTAMEN_L                        584 non-null    float64\n 14  Group (Normal/PD/SWEDD - 1/2/3)  584 non-null    int64  \ndtypes: float64(11), int64(4)\nmemory usage: 68.6 KB\n",
+      "memory_kb": 68.57,
+      "columns": [
+        {
+          "name": "Subject_id",
+          "dtype": "int64",
+          "non_null": 584,
+          "n_unique": 584,
+          "missing": 0
+        },
+        {
+          "name": "A-beta",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 544,
+          "missing": 0
+        },
+        {
+          "name": "alpha-syn",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 584,
+          "missing": 0
+        },
+        {
+          "name": "p-tau",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 238,
+          "missing": 0
+        },
+        {
+          "name": "T-tau",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 383,
+          "missing": 0
+        },
+        {
+          "name": "P-tau/A-beta",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 584,
+          "missing": 0
+        },
+        {
+          "name": "T-tau/A-beta",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 584,
+          "missing": 0
+        },
+        {
+          "name": "P-tau/t-tau",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 578,
+          "missing": 0
+        },
+        {
+          "name": "UPSIT",
+          "dtype": "int64",
+          "non_null": 584,
+          "n_unique": 37,
+          "missing": 0
+        },
+        {
+          "name": "REMBDSQ",
+          "dtype": "int64",
+          "non_null": 584,
+          "n_unique": 12,
+          "missing": 0
+        },
+        {
+          "name": "CAUDATE_R",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 255,
+          "missing": 0
+        },
+        {
+          "name": "CAUDATE_L",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 251,
+          "missing": 0
+        },
+        {
+          "name": "PUTAMEN_R",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 225,
+          "missing": 0
+        },
+        {
+          "name": "PUTAMEN_L",
+          "dtype": "float64",
+          "non_null": 584,
+          "n_unique": 222,
+          "missing": 0
+        },
+        {
+          "name": "Group (Normal/PD/SWEDD - 1/2/3)",
+          "dtype": "int64",
+          "non_null": 584,
+          "n_unique": 2,
+          "missing": 0
+        }
+      ]
+    },
+    "head": [
+      {
+        "Subject_id": 3000,
+        "A-beta": 408.1,
+        "alpha-syn": 2272.32,
+        "p-tau": 16.1,
+        "T-tau": 54.3,
+        "P-tau/A-beta": 0.039451,
+        "T-tau/A-beta": 0.133056,
+        "P-tau/t-tau": 0.296501,
+        "UPSIT": 35,
+        "REMBDSQ": 0,
+        "CAUDATE_R": 2.99,
+        "CAUDATE_L": 3.43,
+        "PUTAMEN_R": 2.94,
+        "PUTAMEN_L": 2.63,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 0
+      },
+      {
+        "Subject_id": 3001,
+        "A-beta": 435.4,
+        "alpha-syn": 1976.82,
+        "p-tau": 30.1,
+        "T-tau": 45.9,
+        "P-tau/A-beta": 0.069132,
+        "T-tau/A-beta": 0.10542,
+        "P-tau/t-tau": 0.655773,
+        "UPSIT": 25,
+        "REMBDSQ": 3,
+        "CAUDATE_R": 2.0,
+        "CAUDATE_L": 1.92,
+        "PUTAMEN_R": 0.8,
+        "PUTAMEN_L": 0.65,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 1
+      },
+      {
+        "Subject_id": 3002,
+        "A-beta": 204.1,
+        "alpha-syn": 2972.06,
+        "p-tau": 18.5,
+        "T-tau": 99.3,
+        "P-tau/A-beta": 0.090642,
+        "T-tau/A-beta": 0.486526,
+        "P-tau/t-tau": 0.186304,
+        "UPSIT": 17,
+        "REMBDSQ": 6,
+        "CAUDATE_R": 2.92,
+        "CAUDATE_L": 3.72,
+        "PUTAMEN_R": 1.01,
+        "PUTAMEN_L": 1.78,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 1
+      },
+      {
+        "Subject_id": 3004,
+        "A-beta": 374.0,
+        "alpha-syn": 1352.57,
+        "p-tau": 11.5,
+        "T-tau": 30.8,
+        "P-tau/A-beta": 0.030749,
+        "T-tau/A-beta": 0.082353,
+        "P-tau/t-tau": 0.373377,
+        "UPSIT": 36,
+        "REMBDSQ": 2,
+        "CAUDATE_R": 5.09,
+        "CAUDATE_L": 5.3,
+        "PUTAMEN_R": 3.54,
+        "PUTAMEN_L": 2.97,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 0
+      },
+      {
+        "Subject_id": 3006,
+        "A-beta": 273.5,
+        "alpha-syn": 1169.0,
+        "p-tau": 9.0,
+        "T-tau": 27.1,
+        "P-tau/A-beta": 0.032907,
+        "T-tau/A-beta": 0.099086,
+        "P-tau/t-tau": 0.332103,
+        "UPSIT": 13,
+        "REMBDSQ": 3,
+        "CAUDATE_R": 2.28,
+        "CAUDATE_L": 2.12,
+        "PUTAMEN_R": 0.76,
+        "PUTAMEN_L": 0.15,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 1
+      },
+      {
+        "Subject_id": 3008,
+        "A-beta": 224.0,
+        "alpha-syn": 3720.71,
+        "p-tau": 20.7,
+        "T-tau": 90.2,
+        "P-tau/A-beta": 0.092411,
+        "T-tau/A-beta": 0.402679,
+        "P-tau/t-tau": 0.22949,
+        "UPSIT": 37,
+        "REMBDSQ": 6,
+        "CAUDATE_R": 3.99,
+        "CAUDATE_L": 3.46,
+        "PUTAMEN_R": 2.07,
+        "PUTAMEN_L": 2.12,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 0
+      },
+      {
+        "Subject_id": 3009,
+        "A-beta": 254.1,
+        "alpha-syn": 683.94,
+        "p-tau": 7.6,
+        "T-tau": 41.7,
+        "P-tau/A-beta": 0.029909,
+        "T-tau/A-beta": 0.164109,
+        "P-tau/t-tau": 0.182254,
+        "UPSIT": 38,
+        "REMBDSQ": 5,
+        "CAUDATE_R": 2.95,
+        "CAUDATE_L": 2.87,
+        "PUTAMEN_R": 1.78,
+        "PUTAMEN_L": 1.91,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 0
+      },
+      {
+        "Subject_id": 3010,
+        "A-beta": 426.7,
+        "alpha-syn": 1148.8,
+        "p-tau": 9.5,
+        "T-tau": 29.2,
+        "P-tau/A-beta": 0.022264,
+        "T-tau/A-beta": 0.068432,
+        "P-tau/t-tau": 0.325342,
+        "UPSIT": 9,
+        "REMBDSQ": 8,
+        "CAUDATE_R": 2.86,
+        "CAUDATE_L": 3.65,
+        "PUTAMEN_R": 0.45,
+        "PUTAMEN_L": 1.24,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 1
+      },
+      {
+        "Subject_id": 3011,
+        "A-beta": 274.6,
+        "alpha-syn": 1063.47,
+        "p-tau": 12.5,
+        "T-tau": 32.4,
+        "P-tau/A-beta": 0.045521,
+        "T-tau/A-beta": 0.11799,
+        "P-tau/t-tau": 0.385802,
+        "UPSIT": 37,
+        "REMBDSQ": 1,
+        "CAUDATE_R": 3.69,
+        "CAUDATE_L": 3.89,
+        "PUTAMEN_R": 3.27,
+        "PUTAMEN_L": 2.74,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 0
+      },
+      {
+        "Subject_id": 3012,
+        "A-beta": 410.0,
+        "alpha-syn": 1949.69,
+        "p-tau": 17.5,
+        "T-tau": 54.9,
+        "P-tau/A-beta": 0.042683,
+        "T-tau/A-beta": 0.133902,
+        "P-tau/t-tau": 0.318761,
+        "UPSIT": 15,
+        "REMBDSQ": 7,
+        "CAUDATE_R": 2.09,
+        "CAUDATE_L": 2.05,
+        "PUTAMEN_R": 0.36,
+        "PUTAMEN_L": 0.71,
+        "Group (Normal/PD/SWEDD - 1/2/3)": 1
+      }
+    ],
+    "describe_numeric": [
+      {
+        "feature": "A-beta",
+        "count": 584.0,
+        "mean": 373.810274,
+        "std": 102.792577,
+        "min": 88.8,
+        "25%": 310.125,
+        "50%": 372.2,
+        "75%": 431.65,
+        "max": 879.5,
+        "skew_valid": 0.518675,
+        "kurtosis_valid": 1.489157,
+        "n_unique": 544
+      },
+      {
+        "feature": "alpha-syn",
+        "count": 584.0,
+        "mean": 1963.531575,
+        "std": 910.805431,
+        "min": 332.93,
+        "25%": 1340.89,
+        "50%": 1797.605,
+        "75%": 2405.3925,
+        "max": 8608.91,
+        "skew_valid": 1.739343,
+        "kurtosis_valid": 6.530599,
+        "n_unique": 584
+      },
+      {
+        "feature": "p-tau",
+        "count": 584.0,
+        "mean": 16.498288,
+        "std": 10.592499,
+        "min": 4.7,
+        "25%": 9.775,
+        "50%": 13.15,
+        "75%": 19.525,
+        "max": 94.1,
+        "skew_valid": 2.468123,
+        "kurtosis_valid": 9.244903,
+        "n_unique": 238
+      },
+      {
+        "feature": "T-tau",
+        "count": 584.0,
+        "mean": 47.396062,
+        "std": 21.873022,
+        "min": 14.4,
+        "25%": 33.0,
+        "50%": 42.4,
+        "75%": 55.55,
+        "max": 223.1,
+        "skew_valid": 2.208804,
+        "kurtosis_valid": 10.180567,
+        "n_unique": 383
+      },
+      {
+        "feature": "P-tau/A-beta",
+        "count": 584.0,
+        "mean": 0.047416,
+        "std": 0.046187,
+        "min": 0.013242,
+        "25%": 0.027171,
+        "50%": 0.034893,
+        "75%": 0.054484,
+        "max": 0.658784,
+        "skew_valid": 7.51211,
+        "kurtosis_valid": 79.434638,
+        "n_unique": 584
+      },
+      {
+        "feature": "T-tau/A-beta",
+        "count": 584.0,
+        "mean": 0.138421,
+        "std": 0.119824,
+        "min": 0.044591,
+        "25%": 0.091314,
+        "50%": 0.110765,
+        "75%": 0.14317,
+        "max": 2.119369,
+        "skew_valid": 9.366444,
+        "kurtosis_valid": 134.775809,
+        "n_unique": 584
+      },
+      {
+        "feature": "P-tau/t-tau",
+        "count": 584.0,
+        "mean": 0.369987,
+        "std": 0.213888,
+        "min": 0.083333,
+        "25%": 0.234755,
+        "50%": 0.300847,
+        "75%": 0.436901,
+        "max": 2.138636,
+        "skew_valid": 2.538738,
+        "kurtosis_valid": 11.461108,
+        "n_unique": 578
+      },
+      {
+        "feature": "UPSIT",
+        "count": 584.0,
+        "mean": 25.934932,
+        "std": 9.164546,
+        "min": 1.0,
+        "25%": 18.75,
+        "50%": 27.0,
+        "75%": 34.0,
+        "max": 40.0,
+        "skew_valid": -0.362571,
+        "kurtosis_valid": -0.990039,
+        "n_unique": 37
+      },
+      {
+        "feature": "REMBDSQ",
+        "count": 584.0,
+        "mean": 3.054795,
+        "std": 2.521348,
+        "min": 0.0,
+        "25%": 1.0,
+        "50%": 3.0,
+        "75%": 4.0,
+        "max": 11.0,
+        "skew_valid": 0.963053,
+        "kurtosis_valid": 0.483949,
+        "n_unique": 12
+      },
+      {
+        "feature": "CAUDATE_R",
+        "count": 584.0,
+        "mean": 2.295497,
+        "std": 0.752451,
+        "min": 0.42,
+        "25%": 1.76,
+        "50%": 2.25,
+        "75%": 2.7225,
+        "max": 5.09,
+        "skew_valid": 0.441243,
+        "kurtosis_valid": 0.263217,
+        "n_unique": 255
+      },
+      {
+        "feature": "CAUDATE_L",
+        "count": 584.0,
+        "mean": 2.314452,
+        "std": 0.775007,
+        "min": 0.35,
+        "25%": 1.7775,
+        "50%": 2.21,
+        "75%": 2.8125,
+        "max": 5.3,
+        "skew_valid": 0.466078,
+        "kurtosis_valid": 0.242972,
+        "n_unique": 251
+      },
+      {
+        "feature": "PUTAMEN_R",
+        "count": 584.0,
+        "mean": 1.252329,
+        "std": 0.747216,
+        "min": 0.14,
+        "25%": 0.67,
+        "50%": 0.965,
+        "75%": 1.745,
+        "max": 3.76,
+        "skew_valid": 0.982768,
+        "kurtosis_valid": 0.17897,
+        "n_unique": 225
+      },
+      {
+        "feature": "PUTAMEN_L",
+        "count": 584.0,
+        "mean": 1.225599,
+        "std": 0.750374,
+        "min": 0.12,
+        "25%": 0.6575,
+        "50%": 0.96,
+        "75%": 1.7325,
+        "max": 4.27,
+        "skew_valid": 0.986417,
+        "kurtosis_valid": 0.242182,
+        "n_unique": 222
+      }
+    ],
+    "describe_categorical": [],
+    "value_counts": {},
+    "constant_columns": [],
+    "dropped_columns": [
+      "Subject_id"
+    ],
+    "feature_roles": {
+      "continuous_numeric": [
+        "A-beta",
+        "alpha-syn",
+        "p-tau",
+        "T-tau",
+        "P-tau/A-beta",
+        "T-tau/A-beta",
+        "P-tau/t-tau",
+        "UPSIT",
+        "REMBDSQ",
+        "CAUDATE_R",
+        "CAUDATE_L",
+        "PUTAMEN_R",
+        "PUTAMEN_L"
+      ],
+      "low_cardinality_numeric": [],
+      "categorical": [],
+      "target": "Group (Normal/PD/SWEDD - 1/2/3)"
+    },
+    "insights": [
+      "Parkinson's Disease: 'data1.csv' contains 584 rows and 15 columns.",
+      "Analysed features: 13 numeric (13 continuous, 0 coded/low-cardinality), 0 categorical. Target: 'Group (Normal/PD/SWEDD - 1/2/3)'.",
+      "Excluded identifier / non-predictive column(s): ['Subject_id'].",
+      "Strongly skewed features (|skew| > 1.5): ['alpha-syn', 'p-tau', 'T-tau', 'P-tau/A-beta', 'T-tau/A-beta', 'P-tau/t-tau'].",
+      "8 rows (1.37%) contain at least one contradictory record across 2 rule(s); see the 'Contradictions' section."
+    ],
+    "plots": []
+  },
+  "data_quality": {
+    "description": "Consolidated Phase-I quality indicators: completeness, duplicates, contradictions, out-of-range values, noisy features and outlier samples, all expressed as percentages and combined into one quality score.",
+    "quality_score": 92.2,
+    "quality_label": "good",
+    "indicators": [
+      {
+        "indicator": "Completeness",
+        "value": 100.0,
+        "unit": "%",
+        "issue_percent": 0.0,
+        "status": "good",
+        "detail": "0 effective missing cells (0 NaN + 0 hidden zeros)"
+      },
+      {
+        "indicator": "Duplicate rows",
+        "value": 0.0,
+        "unit": "%",
+        "issue_percent": 0.0,
+        "status": "good",
+        "detail": "0 exact duplicate row(s)"
+      },
+      {
+        "indicator": "Contradictory rows",
+        "value": 1.37,
+        "unit": "%",
+        "issue_percent": 1.37,
+        "status": "warning",
+        "detail": "8 rows / 16 contradictions"
+      },
+      {
+        "indicator": "Out-of-range cells",
+        "value": 0.0,
+        "unit": "%",
+        "issue_percent": 0.0,
+        "status": "good",
+        "detail": "0 values outside the physical range (masked)"
+      },
+      {
+        "indicator": "Noisy features",
+        "value": 69.23,
+        "unit": "%",
+        "issue_percent": 69.23,
+        "status": "critical",
+        "detail": "9/13 tested continuous features flagged"
+      },
+      {
+        "indicator": "Outlier samples",
+        "value": 4.28,
+        "unit": "%",
+        "issue_percent": 4.28,
+        "status": "good",
+        "detail": "25 samples flagged by the unsupervised consensus"
+      }
+    ],
+    "dashboard": {
+      "dataset": "Parkinson's Disease",
+      "rows": 584,
+      "columns": 15,
+      "quality_score": 92.2,
+      "quality_label": "good",
+      "contradictions_percent": 1.37,
+      "noise_percent": 69.23,
+      "outliers_percent": 4.28
+    },
+    "insights": [
+      "Overall data quality score: 92.2/100 (good).",
+      "Completeness 100.00% | duplicates 0.00% | contradictions 1.37% | out-of-range 0.00%.",
+      "Noise affects 69.2% of tested features (9/13); 4.28% of samples are consensus outliers.",
+      "Weakest indicator: Noisy features (69.23%)."
+    ],
+    "plots": [
+      "data_quality_indicators"
+    ]
+  },
+  "contradictions": {
+    "description": "Domain rules that detect logically / biologically contradictory records (e.g. blood pressure = 0, cholesterol = 0, p-tau > total tau, class 'no alcohol' with a positive alcohol measurement). Flagged values are reported raw and are excluded from later statistics.",
+    "summary": {
+      "total_rules": 8,
+      "triggered_rules": 2,
+      "total_flags": 16,
+      "rows_flagged": 8,
+      "rows_flagged_percent": 1.37,
+      "max_contradictions_in_one_row": 2
+    },
+    "rules": [
+      {
+        "id": "ptau_gt_ttau",
+        "label": "p-tau greater than total tau",
+        "description": "Phosphorylated tau is a fraction of total tau, so p-tau > t-tau is biologically contradictory.",
+        "columns": [
+          "p-tau",
+          "T-tau"
+        ],
+        "severity": "critical",
+        "count": 8,
+        "percent": 1.37,
+        "row_indices": [
+          46,
+          58,
+          137,
+          163,
+          497,
+          526,
+          546,
+          567
+        ],
+        "examples": [
+          {
+            "row": 46,
+            "p-tau": 46.9,
+            "T-tau": 44.1
+          },
+          {
+            "row": 58,
+            "p-tau": 26.6,
+            "T-tau": 24.6
+          },
+          {
+            "row": 137,
+            "p-tau": 46.9,
+            "T-tau": 36.5
+          },
+          {
+            "row": 163,
+            "p-tau": 94.1,
+            "T-tau": 44.0
+          },
+          {
+            "row": 497,
+            "p-tau": 38.8,
+            "T-tau": 27.8
+          }
+        ]
+      },
+      {
+        "id": "ratio_gt_one",
+        "label": "p-tau / t-tau ratio greater than 1",
+        "description": "The p-tau / t-tau ratio cannot exceed 1 because p-tau is part of t-tau.",
+        "columns": [
+          "P-tau/t-tau",
+          "p-tau",
+          "T-tau"
+        ],
+        "severity": "critical",
+        "count": 8,
+        "percent": 1.37,
+        "row_indices": [
+          46,
+          58,
+          137,
+          163,
+          497,
+          526,
+          546,
+          567
+        ],
+        "examples": [
+          {
+            "row": 46,
+            "P-tau/t-tau": 1.0635,
+            "p-tau": 46.9,
+            "T-tau": 44.1
+          },
+          {
+            "row": 58,
+            "P-tau/t-tau": 1.0813,
+            "p-tau": 26.6,
+            "T-tau": 24.6
+          },
+          {
+            "row": 137,
+            "P-tau/t-tau": 1.2849,
+            "p-tau": 46.9,
+            "T-tau": 36.5
+          },
+          {
+            "row": 163,
+            "P-tau/t-tau": 2.1386,
+            "p-tau": 94.1,
+            "T-tau": 44.0
+          },
+          {
+            "row": 497,
+            "P-tau/t-tau": 1.3957,
+            "p-tau": 38.8,
+            "T-tau": 27.8
+          }
+        ]
+      },
+      {
+        "id": "biomarker_nonpositive",
+        "label": "Non-positive CSF biomarker",
+        "description": "A-beta, alpha-synuclein, p-tau and t-tau are concentrations and must be strictly positive.",
+        "columns": [
+          "A-beta",
+          "alpha-syn",
+          "p-tau",
+          "T-tau"
+        ],
+        "severity": "critical",
+        "count": 0,
+        "percent": 0.0,
+        "row_indices": [],
+        "examples": []
+      },
+      {
+        "id": "datscan_nonpositive",
+        "label": "Non-positive DaTscan binding",
+        "description": "Caudate / putamen binding ratios must be positive.",
+        "columns": [
+          "CAUDATE_R",
+          "CAUDATE_L",
+          "PUTAMEN_R",
+          "PUTAMEN_L"
+        ],
+        "severity": "critical",
+        "count": 0,
+        "percent": 0.0,
+        "row_indices": [],
+        "examples": []
+      },
+      {
+        "id": "group_invalid",
+        "label": "Invalid diagnostic group",
+        "description": "Group codes are 0 (normal), 1 (PD) and 2 (SWEDD) in the documentation, so any other code is invalid.",
+        "columns": [
+          "Group (Normal/PD/SWEDD - 1/2/3)"
+        ],
+        "severity": "critical",
+        "count": 0,
+        "percent": 0.0,
+        "row_indices": [],
+        "examples": []
+      },
+      {
+        "id": "ratio_mismatch",
+        "label": "Ratio does not match its components",
+        "description": "The published ratio columns do not equal the ratio of their own components (tolerance 1%), which indicates a transcription error.",
+        "columns": [
+          "P-tau/A-beta",
+          "T-tau/A-beta",
+          "P-tau/t-tau"
+        ],
+        "severity": "warning",
+        "count": 0,
+        "percent": 0.0,
+        "row_indices": [],
+        "examples": []
+      },
+      {
+        "id": "rembdsq_impossible",
+        "label": "REMBDSQ outside 0-13",
+        "description": "The REM sleep behaviour questionnaire is scored 0-13.",
+        "columns": [
+          "REMBDSQ"
+        ],
+        "severity": "critical",
+        "count": 0,
+        "percent": 0.0,
+        "row_indices": [],
+        "examples": []
+      },
+      {
+        "id": "upsit_impossible",
+        "label": "UPSIT outside 0-40",
+        "description": "The smell identification test is scored 0-40.",
+        "columns": [
+          "UPSIT"
+        ],
+        "severity": "critical",
+        "count": 0,
+        "percent": 0.0,
+        "row_indices": [],
+        "examples": []
+      }
+    ],
+    "insights": [
+      "8 of 584 rows (1.37%) contain at least one contradictory value; 16 contradictions in total. The worst row contains 2.",
+      "[CRITICAL] p-tau greater than total tau: 8 row(s) (1.37%) - example row 46: p-tau=46.9, T-tau=44.1.",
+      "[CRITICAL] p-tau / t-tau ratio greater than 1: 8 row(s) (1.37%) - example row 46: P-tau/t-tau=1.0635, p-tau=46.9, T-tau=44.1."
+    ],
+    "plots": [
+      "contradictions_rules",
+      "contradictions_per_row",
+      "contradiction_ptau_gt_ttau"
+    ]
+  },
+  "missing_duplicates": {
+    "description": "Completeness check: explicit NaN cells, exact duplicate rows and columns, and hidden missing values coded as zero in physiologically positive features.",
+    "missing": {
+      "total_cells": 0,
+      "columns": [
+        {
+          "name": "Subject_id",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "A-beta",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "alpha-syn",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "p-tau",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "T-tau",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "P-tau/A-beta",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "T-tau/A-beta",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "P-tau/t-tau",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "UPSIT",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "REMBDSQ",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "CAUDATE_R",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "CAUDATE_L",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "PUTAMEN_R",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "PUTAMEN_L",
+          "count": 0,
+          "percent": 0.0
+        },
+        {
+          "name": "Group (Normal/PD/SWEDD - 1/2/3)",
+          "count": 0,
+          "percent": 0.0
+        }
+      ]
+    },
+    "hidden_missing_zeros": {},
+    "duplicates": {
+      "count": 0,
+      "percent": 0.0,
+      "examples": []
+    },
+    "duplicate_columns": [],
+    "insights": [
+      "No explicit missing (NaN) values in the raw file.",
+      "No exact duplicate rows."
+    ],
+    "plots": []
+  },
+  "noise": {
+    "description": "Noise-to-signal analysis for tabular data: local k-NN residual noise divided by the robust signal spread, SNR(dB), Hampel spikes, repeated readings and out-of-range values. Each feature receives a verdict.",
+    "method": {
+      "noise_to_signal": "Robust sigma of the residual between each reading and the median of its 8 nearest neighbours in standardised feature space, divided by the robust sigma of the feature. 0 = perfectly predictable / smooth, 1 = as large as the signal itself. This is the tabular adaptation of the weather second-difference NSR (row order is meaningless in these tables).",
+      "snr_db": "10*log10(signal variance / noise variance); > 20 dB is very clean, < 5 dB is noisy.",
+      "spikes": "Residual larger than 3.5 robust sigmas and 40% of the signal spread.",
+      "stuck_sensor": ">= 10 identical consecutive readings on a continuous feature.",
+      "out_of_range": "Values outside the biological / physical range; masked before stats."
+    },
+    "thresholds": {
+      "negligible": "< 0.05",
+      "low": "< 0.15",
+      "moderate": "< 0.35",
+      "high": ">= 0.35"
+    },
+    "features": [
+      {
+        "feature": "A-beta",
+        "n_samples": 584,
+        "signal_sigma": 90.2162,
+        "noise_sigma": 40.1043,
+        "noise_to_signal": 0.4445,
+        "snr_db": 6.09,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 9,
+        "spike_percent": 1.54,
+        "spike_examples": [
+          638.9,
+          670.0,
+          660.8,
+          184.8,
+          680.3
+        ],
+        "longest_flat_run": 1,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 408.1,
+        "out_of_range_count": 0,
+        "valid_range": [
+          50.0,
+          1500.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 44.5% of signal spread)",
+          "9 isolated spikes (1.54%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "alpha-syn",
+        "n_samples": 584,
+        "signal_sigma": 742.7604,
+        "noise_sigma": 344.2708,
+        "noise_to_signal": 0.4635,
+        "snr_db": 5.63,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 12,
+        "spike_percent": 2.05,
+        "spike_examples": [
+          3720.71,
+          4337.44,
+          3992.4,
+          5104.2,
+          5110.77
+        ],
+        "longest_flat_run": 1,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 2272.32,
+        "out_of_range_count": 0,
+        "valid_range": [
+          100.0,
+          10000.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 46.4% of signal spread)",
+          "12 isolated spikes (2.05%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "p-tau",
+        "n_samples": 584,
+        "signal_sigma": 6.1528,
+        "noise_sigma": 2.5575,
+        "noise_to_signal": 0.4157,
+        "snr_db": 6.8,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 25,
+        "spike_percent": 4.28,
+        "spike_examples": [
+          58.5,
+          35.2,
+          73.3,
+          50.0,
+          48.8
+        ],
+        "longest_flat_run": 2,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 10.0,
+        "out_of_range_count": 0,
+        "valid_range": [
+          1.0,
+          200.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 41.6% of signal spread)",
+          "25 isolated spikes (4.28%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "T-tau",
+        "n_samples": 584,
+        "signal_sigma": 15.4932,
+        "noise_sigma": 6.5234,
+        "noise_to_signal": 0.4211,
+        "snr_db": 6.67,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 13,
+        "spike_percent": 2.23,
+        "spike_examples": [
+          188.2,
+          107.8,
+          104.7,
+          110.0,
+          81.6
+        ],
+        "longest_flat_run": 2,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 45.7,
+        "out_of_range_count": 0,
+        "valid_range": [
+          10.0,
+          500.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 42.1% of signal spread)",
+          "13 isolated spikes (2.23%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "P-tau/A-beta",
+        "n_samples": 584,
+        "signal_sigma": 0.0152,
+        "noise_sigma": 0.0081,
+        "noise_to_signal": 0.5319,
+        "snr_db": 4.04,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 31,
+        "spike_percent": 5.31,
+        "spike_examples": [
+          0.6588,
+          0.1713,
+          0.4421,
+          0.1262,
+          0.1006
+        ],
+        "longest_flat_run": 1,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 0.039451,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.0001,
+          5.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 53.2% of signal spread)",
+          "31 isolated spikes (5.31%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "T-tau/A-beta",
+        "n_samples": 584,
+        "signal_sigma": 0.0357,
+        "noise_sigma": 0.0211,
+        "noise_to_signal": 0.5906,
+        "snr_db": 2.71,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 31,
+        "spike_percent": 5.31,
+        "spike_examples": [
+          0.4865,
+          2.1194,
+          0.5246,
+          0.6713,
+          0.5161
+        ],
+        "longest_flat_run": 1,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 0.133056,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.0001,
+          5.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 59.1% of signal spread)",
+          "31 isolated spikes (5.31%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "P-tau/t-tau",
+        "n_samples": 584,
+        "signal_sigma": 0.1325,
+        "noise_sigma": 0.0612,
+        "noise_to_signal": 0.4619,
+        "snr_db": 5.67,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 9,
+        "spike_percent": 1.54,
+        "spike_examples": [
+          0.7814,
+          1.2849,
+          2.1386,
+          0.9394,
+          0.7228
+        ],
+        "longest_flat_run": 2,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 0.233333,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.0001,
+          5.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 46.2% of signal spread)",
+          "9 isolated spikes (1.54%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "UPSIT",
+        "n_samples": 584,
+        "signal_sigma": 11.8608,
+        "noise_sigma": 3.3358,
+        "noise_to_signal": 0.2812,
+        "snr_db": 10.66,
+        "verdict": "moderate",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 7,
+        "spike_percent": 1.2,
+        "spike_examples": [
+          17.0,
+          15.0,
+          21.0,
+          17.0,
+          5.0
+        ],
+        "longest_flat_run": 3,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 30.0,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.0,
+          40.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "moderate local random fluctuation (NSR 28.1% of signal spread)",
+          "7 isolated spikes (1.2%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "REMBDSQ",
+        "n_samples": 584,
+        "signal_sigma": 2.9652,
+        "noise_sigma": 1.4826,
+        "noise_to_signal": 0.5,
+        "snr_db": 4.77,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 0,
+        "spike_percent": 0.0,
+        "spike_examples": [],
+        "longest_flat_run": 4,
+        "zero_fraction": 0.1473,
+        "stuck_sensor": 0,
+        "stuck_value": 2.0,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.0,
+          13.0
+        ],
+        "has_noise": 0,
+        "has_errors": 0,
+        "noise_reasons": [],
+        "error_reasons": []
+      },
+      {
+        "feature": "CAUDATE_R",
+        "n_samples": 584,
+        "signal_sigma": 0.7191,
+        "noise_sigma": 0.2595,
+        "noise_to_signal": 0.3608,
+        "snr_db": 8.25,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 4,
+        "spike_percent": 0.68,
+        "spike_examples": [
+          3.99,
+          3.36,
+          4.96,
+          3.7
+        ],
+        "longest_flat_run": 2,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 1.83,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.1,
+          6.0
+        ],
+        "has_noise": 0,
+        "has_errors": 0,
+        "noise_reasons": [],
+        "error_reasons": []
+      },
+      {
+        "feature": "CAUDATE_L",
+        "n_samples": 584,
+        "signal_sigma": 0.771,
+        "noise_sigma": 0.2817,
+        "noise_to_signal": 0.3654,
+        "snr_db": 8.12,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 7,
+        "spike_percent": 1.2,
+        "spike_examples": [
+          3.72,
+          5.3,
+          3.65,
+          3.63,
+          1.05
+        ],
+        "longest_flat_run": 2,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 1.88,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.1,
+          6.0
+        ],
+        "has_noise": 1,
+        "has_errors": 0,
+        "noise_reasons": [
+          "high local random fluctuation (NSR 36.5% of signal spread)",
+          "7 isolated spikes (1.2%)"
+        ],
+        "error_reasons": []
+      },
+      {
+        "feature": "PUTAMEN_R",
+        "n_samples": 584,
+        "signal_sigma": 0.5856,
+        "noise_sigma": 0.2224,
+        "noise_to_signal": 0.3797,
+        "snr_db": 7.73,
+        "verdict": "high",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 5,
+        "spike_percent": 0.86,
+        "spike_examples": [
+          2.62,
+          1.9,
+          3.74,
+          3.19,
+          1.66
+        ],
+        "longest_flat_run": 2,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 2.37,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.1,
+          6.0
+        ],
+        "has_noise": 0,
+        "has_errors": 0,
+        "noise_reasons": [],
+        "error_reasons": []
+      },
+      {
+        "feature": "PUTAMEN_L",
+        "n_samples": 584,
+        "signal_sigma": 0.6079,
+        "noise_sigma": 0.2076,
+        "noise_to_signal": 0.3415,
+        "snr_db": 8.79,
+        "verdict": "moderate",
+        "nsr_method": "k-NN local residual (k=8)",
+        "spikes_count": 3,
+        "spike_percent": 0.51,
+        "spike_examples": [
+          2.86,
+          4.27,
+          1.71
+        ],
+        "longest_flat_run": 2,
+        "zero_fraction": 0.0,
+        "stuck_sensor": 0,
+        "stuck_value": 1.52,
+        "out_of_range_count": 0,
+        "valid_range": [
+          0.1,
+          6.0
+        ],
+        "has_noise": 0,
+        "has_errors": 0,
+        "noise_reasons": [],
+        "error_reasons": []
+      }
+    ],
+    "summary": {
+      "features_checked": 13,
+      "features_excluded": [],
+      "zero_inflated_excluded": [],
+      "noisy_features": [
+        "A-beta",
+        "alpha-syn",
+        "p-tau",
+        "T-tau",
+        "P-tau/A-beta",
+        "T-tau/A-beta",
+        "P-tau/t-tau",
+        "UPSIT",
+        "CAUDATE_L"
+      ],
+      "error_features": [],
+      "noisy_feature_percent": 69.23,
+      "error_feature_percent": 0.0,
+      "mean_noise_to_signal": 0.4275
+    },
+    "insights": [
+      "Noise-to-signal is estimated from a local k-NN smoother in feature space (k=8), because these tables are not time series: row order is arbitrary, so the weather second-difference formula would measure row order.",
+      "Moderate/high random noise in 9 feature(s): ['A-beta', 'alpha-syn', 'p-tau', 'T-tau', 'P-tau/A-beta', 'T-tau/A-beta', 'P-tau/t-tau', 'UPSIT', 'CAUDATE_L'].",
+      "No out-of-range values or stuck readings among the tested features.",
+      "Noisiest: 'T-tau/A-beta' (NSR 0.59, SNR 2.71 dB); cleanest: 'UPSIT' (NSR 0.28).",
+      "Clean features: ['REMBDSQ', 'CAUDATE_R', 'PUTAMEN_R', 'PUTAMEN_L']."
+    ],
+    "plots": [
+      "noise_levels",
+      "noise_residual_t_tau_a_beta",
+      "noise_residual_p_tau_a_beta",
+      "noise_residual_rembdsq",
+      "noise_vs_signal"
+    ]
+  },
+  "outliers": {
+    "description": "Classical univariate methods (IQR fences, Z-score, modified Z-score / MAD, 1-99% percentile) plus a consensus of six unsupervised multivariate detectors (Isolation Forest, One-Class SVM, LOF, Elliptic Envelope, DBSCAN, robust Mahalanobis).",
+    "summary": {
+      "features_checked": 13,
+      "methods_used": 6,
+      "consensus_count": 25,
+      "consensus_percent": 4.28,
+      "unanimous_count": 7,
+      "mean_iqr_percent": 3.45,
+      "max_iqr_percent": 8.56
+    },
+    "classical_features": [
+      {
+        "feature": "A-beta",
+        "min": 88.8,
+        "max": 879.5,
+        "q1": 310.125,
+        "q3": 431.65,
+        "iqr": 121.525,
+        "lower_fence": 127.8375,
+        "upper_fence": 613.9375,
+        "iqr_outliers": 15,
+        "iqr_percent": 2.57,
+        "z_outliers": 3,
+        "z_percent": 0.51,
+        "modified_z_outliers": 1,
+        "modified_z_percent": 0.17,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "alpha-syn",
+        "min": 332.93,
+        "max": 8608.91,
+        "q1": 1340.89,
+        "q3": 2405.3925,
+        "iqr": 1064.5025,
+        "lower_fence": -255.86375,
+        "upper_fence": 4002.14625,
+        "iqr_outliers": 16,
+        "iqr_percent": 2.74,
+        "z_outliers": 8,
+        "z_percent": 1.37,
+        "modified_z_outliers": 2,
+        "modified_z_percent": 0.34,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "p-tau",
+        "min": 4.7,
+        "max": 94.1,
+        "q1": 9.775,
+        "q3": 19.525,
+        "iqr": 9.75,
+        "lower_fence": -4.85,
+        "upper_fence": 34.15,
+        "iqr_outliers": 37,
+        "iqr_percent": 6.34,
+        "z_outliers": 13,
+        "z_percent": 2.23,
+        "modified_z_outliers": 15,
+        "modified_z_percent": 2.57,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "T-tau",
+        "min": 14.4,
+        "max": 223.1,
+        "q1": 33.0,
+        "q3": 55.55,
+        "iqr": 22.55,
+        "lower_fence": -0.825,
+        "upper_fence": 89.375,
+        "iqr_outliers": 30,
+        "iqr_percent": 5.14,
+        "z_outliers": 7,
+        "z_percent": 1.2,
+        "modified_z_outliers": 3,
+        "modified_z_percent": 0.51,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "P-tau/A-beta",
+        "min": 0.013242,
+        "max": 0.658784,
+        "q1": 0.027171,
+        "q3": 0.054484,
+        "iqr": 0.027314,
+        "lower_fence": -0.0138,
+        "upper_fence": 0.095455,
+        "iqr_outliers": 31,
+        "iqr_percent": 5.31,
+        "z_outliers": 8,
+        "z_percent": 1.37,
+        "modified_z_outliers": 20,
+        "modified_z_percent": 3.42,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "T-tau/A-beta",
+        "min": 0.044591,
+        "max": 2.119369,
+        "q1": 0.091314,
+        "q3": 0.14317,
+        "iqr": 0.051856,
+        "lower_fence": 0.013531,
+        "upper_fence": 0.220953,
+        "iqr_outliers": 50,
+        "iqr_percent": 8.56,
+        "z_outliers": 8,
+        "z_percent": 1.37,
+        "modified_z_outliers": 29,
+        "modified_z_percent": 4.97,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "P-tau/t-tau",
+        "min": 0.083333,
+        "max": 2.138636,
+        "q1": 0.234755,
+        "q3": 0.436901,
+        "iqr": 0.202145,
+        "lower_fence": -0.068463,
+        "upper_fence": 0.740119,
+        "iqr_outliers": 34,
+        "iqr_percent": 5.82,
+        "z_outliers": 8,
+        "z_percent": 1.37,
+        "modified_z_outliers": 9,
+        "modified_z_percent": 1.54,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "UPSIT",
+        "min": 1.0,
+        "max": 40.0,
+        "q1": 18.75,
+        "q3": 34.0,
+        "iqr": 15.25,
+        "lower_fence": -4.125,
+        "upper_fence": 56.875,
+        "iqr_outliers": 0,
+        "iqr_percent": 0.0,
+        "z_outliers": 0,
+        "z_percent": 0.0,
+        "modified_z_outliers": 0,
+        "modified_z_percent": 0.0,
+        "percentile_outliers": 7,
+        "percentile_percent": 1.2
+      },
+      {
+        "feature": "REMBDSQ",
+        "min": 0.0,
+        "max": 11.0,
+        "q1": 1.0,
+        "q3": 4.0,
+        "iqr": 3.0,
+        "lower_fence": -3.5,
+        "upper_fence": 8.5,
+        "iqr_outliers": 24,
+        "iqr_percent": 4.11,
+        "z_outliers": 5,
+        "z_percent": 0.86,
+        "modified_z_outliers": 0,
+        "modified_z_percent": 0.0,
+        "percentile_outliers": 5,
+        "percentile_percent": 0.86
+      },
+      {
+        "feature": "CAUDATE_R",
+        "min": 0.42,
+        "max": 5.09,
+        "q1": 1.76,
+        "q3": 2.7225,
+        "iqr": 0.9625,
+        "lower_fence": 0.31625,
+        "upper_fence": 4.16625,
+        "iqr_outliers": 7,
+        "iqr_percent": 1.2,
+        "z_outliers": 3,
+        "z_percent": 0.51,
+        "modified_z_outliers": 0,
+        "modified_z_percent": 0.0,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "CAUDATE_L",
+        "min": 0.35,
+        "max": 5.3,
+        "q1": 1.7775,
+        "q3": 2.8125,
+        "iqr": 1.035,
+        "lower_fence": 0.225,
+        "upper_fence": 4.365,
+        "iqr_outliers": 7,
+        "iqr_percent": 1.2,
+        "z_outliers": 3,
+        "z_percent": 0.51,
+        "modified_z_outliers": 0,
+        "modified_z_percent": 0.0,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "PUTAMEN_R",
+        "min": 0.14,
+        "max": 3.76,
+        "q1": 0.67,
+        "q3": 1.745,
+        "iqr": 1.075,
+        "lower_fence": -0.9425,
+        "upper_fence": 3.3575,
+        "iqr_outliers": 7,
+        "iqr_percent": 1.2,
+        "z_outliers": 5,
+        "z_percent": 0.86,
+        "modified_z_outliers": 0,
+        "modified_z_percent": 0.0,
+        "percentile_outliers": 12,
+        "percentile_percent": 2.05
+      },
+      {
+        "feature": "PUTAMEN_L",
+        "min": 0.12,
+        "max": 4.27,
+        "q1": 0.6575,
+        "q3": 1.7325,
+        "iqr": 1.075,
+        "lower_fence": -0.955,
+        "upper_fence": 3.345,
+        "iqr_outliers": 4,
+        "iqr_percent": 0.68,
+        "z_outliers": 3,
+        "z_percent": 0.51,
+        "modified_z_outliers": 1,
+        "modified_z_percent": 0.17,
+        "percentile_outliers": 11,
+        "percentile_percent": 1.88
+      }
+    ],
+    "machine_learning_outliers": {
+      "total_samples": 584,
+      "n_features_used": 13,
+      "contamination_rate": 0.05,
+      "methods_used": [
+        "isolation_forest",
+        "one_class_svm",
+        "local_outlier_factor",
+        "elliptic_envelope",
+        "dbscan",
+        "mahalanobis"
+      ],
+      "methods": {
+        "isolation_forest": {
+          "outlier_count": 30,
+          "outlier_percent": 5.14,
+          "indices": [
+            2,
+            3,
+            5,
+            10,
+            14,
+            52,
+            106,
+            120,
+            129,
+            163,
+            188,
+            222,
+            228,
+            243,
+            244,
+            259,
+            291,
+            294,
+            298,
+            313,
+            314,
+            355,
+            363,
+            364,
+            444,
+            483,
+            485,
+            493,
+            497,
+            516
+          ],
+          "note": ""
+        },
+        "one_class_svm": {
+          "outlier_count": 32,
+          "outlier_percent": 5.48,
+          "indices": [
+            10,
+            25,
+            28,
+            46,
+            52,
+            120,
+            129,
+            163,
+            187,
+            221,
+            222,
+            225,
+            244,
+            259,
+            265,
+            294,
+            301,
+            313,
+            321,
+            351,
+            355,
+            388,
+            391,
+            396,
+            423,
+            485,
+            491,
+            497,
+            501,
+            502,
+            526,
+            582
+          ],
+          "note": ""
+        },
+        "local_outlier_factor": {
+          "outlier_count": 30,
+          "outlier_percent": 5.14,
+          "indices": [
+            7,
+            10,
+            52,
+            106,
+            120,
+            129,
+            163,
+            175,
+            188,
+            222,
+            234,
+            243,
+            244,
+            259,
+            265,
+            294,
+            313,
+            355,
+            382,
+            388,
+            391,
+            400,
+            444,
+            489,
+            493,
+            497,
+            502,
+            516,
+            526,
+            561
+          ],
+          "note": "k = 20 nearest neighbours"
+        },
+        "elliptic_envelope": {
+          "outlier_count": 30,
+          "outlier_percent": 5.14,
+          "indices": [
+            2,
+            5,
+            10,
+            14,
+            25,
+            41,
+            42,
+            46,
+            52,
+            89,
+            106,
+            115,
+            120,
+            137,
+            163,
+            222,
+            266,
+            274,
+            293,
+            301,
+            313,
+            489,
+            491,
+            497,
+            516,
+            526,
+            541,
+            560,
+            561,
+            562
+          ],
+          "note": ""
+        },
+        "dbscan": {
+          "outlier_count": 12,
+          "outlier_percent": 2.05,
+          "indices": [
+            10,
+            25,
+            52,
+            106,
+            120,
+            163,
+            222,
+            259,
+            313,
+            493,
+            497,
+            516
+          ],
+          "note": "eps = 3.429, min_samples = 20"
+        },
+        "mahalanobis": {
+          "outlier_count": 30,
+          "outlier_percent": 5.14,
+          "indices": [
+            2,
+            5,
+            10,
+            14,
+            25,
+            41,
+            42,
+            46,
+            52,
+            89,
+            106,
+            115,
+            120,
+            137,
+            163,
+            222,
+            266,
+            274,
+            293,
+            301,
+            313,
+            489,
+            491,
+            497,
+            516,
+            526,
+            541,
+            560,
+            561,
+            562
+          ],
+          "note": "robust minimum-covariance estimate"
+        }
+      },
+      "consensus_rule": "flagged by at least 3 of 6 detectors",
+      "consensus_outliers": {
+        "count": 25,
+        "percent": 4.28,
+        "indices": [
+          2,
+          5,
+          10,
+          14,
+          25,
+          46,
+          52,
+          106,
+          120,
+          129,
+          163,
+          222,
+          244,
+          259,
+          294,
+          301,
+          313,
+          355,
+          489,
+          491,
+          493,
+          497,
+          516,
+          526,
+          561
+        ]
+      },
+      "unanimous_outliers": {
+        "count": 7,
+        "percent": 1.2,
+        "indices": [
+          10,
+          52,
+          120,
+          163,
+          222,
+          313,
+          497
+        ]
+      },
+      "vote_counts": [
+        0,
+        0,
+        3,
+        1,
+        0,
+        3,
+        0,
+        1,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        2,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        6,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        3,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0,
+        3,
+        0,
+        3,
+        0,
+        3,
+        0,
+        0,
+        0,
+        6,
+        0,
+        0,
+        0,
+        1,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        3,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "vote_histogram": {
+        "0": 517,
+        "1": 23,
+        "2": 19,
+        "3": 13,
+        "4": 3,
+        "5": 2,
+        "6": 7
+      },
+      "agreement": [
+        {
+          "a": "elliptic_envelope",
+          "b": "mahalanobis",
+          "jaccard": 1.0
+        },
+        {
+          "a": "isolation_forest",
+          "b": "local_outlier_factor",
+          "jaccard": 0.4286
+        },
+        {
+          "a": "one_class_svm",
+          "b": "local_outlier_factor",
+          "jaccard": 0.3778
+        },
+        {
+          "a": "isolation_forest",
+          "b": "dbscan",
+          "jaccard": 0.3548
+        },
+        {
+          "a": "local_outlier_factor",
+          "b": "dbscan",
+          "jaccard": 0.3548
+        },
+        {
+          "a": "elliptic_envelope",
+          "b": "dbscan",
+          "jaccard": 0.3125
+        },
+        {
+          "a": "dbscan",
+          "b": "mahalanobis",
+          "jaccard": 0.3125
+        },
+        {
+          "a": "isolation_forest",
+          "b": "one_class_svm",
+          "jaccard": 0.2653
+        },
+        {
+          "a": "one_class_svm",
+          "b": "dbscan",
+          "jaccard": 0.2571
+        },
+        {
+          "a": "isolation_forest",
+          "b": "elliptic_envelope",
+          "jaccard": 0.25
+        },
+        {
+          "a": "isolation_forest",
+          "b": "mahalanobis",
+          "jaccard": 0.25
+        },
+        {
+          "a": "local_outlier_factor",
+          "b": "elliptic_envelope",
+          "jaccard": 0.25
+        },
+        {
+          "a": "local_outlier_factor",
+          "b": "mahalanobis",
+          "jaccard": 0.25
+        },
+        {
+          "a": "one_class_svm",
+          "b": "elliptic_envelope",
+          "jaccard": 0.24
+        },
+        {
+          "a": "one_class_svm",
+          "b": "mahalanobis",
+          "jaccard": 0.24
+        }
+      ],
+      "feature_level_isolation_forest": {
+        "A-beta": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "alpha-syn": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "p-tau": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "T-tau": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "P-tau/A-beta": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "T-tau/A-beta": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "P-tau/t-tau": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "UPSIT": {
+          "outliers": 19,
+          "percent": 3.25
+        },
+        "REMBDSQ": {
+          "outliers": 24,
+          "percent": 4.11
+        },
+        "CAUDATE_R": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "CAUDATE_L": {
+          "outliers": 29,
+          "percent": 4.97
+        },
+        "PUTAMEN_R": {
+          "outliers": 30,
+          "percent": 5.14
+        },
+        "PUTAMEN_L": {
+          "outliers": 30,
+          "percent": 5.14
+        }
+      }
+    },
+    "insights": [
+      "Most outlier-prone feature (IQR): 'T-tau/A-beta' (50 points, 8.56%).",
+      "IQR flags far more points than the Z-score for ['A-beta', 'T-tau', 'P-tau/A-beta', 'T-tau/A-beta', 'P-tau/t-tau', 'REMBDSQ']: heavy-tailed or skewed distribution, so those extremes may be genuine.",
+      "Isolation Forest: 30 anomalies (5.14%).",
+      "One Class Svm: 32 anomalies (5.48%).",
+      "Local Outlier Factor: 30 anomalies (5.14%).",
+      "Elliptic Envelope: 30 anomalies (5.14%).",
+      "Dbscan: 12 anomalies (2.05%).",
+      "Mahalanobis: 30 anomalies (5.14%).",
+      "Consensus anomalie(s): 25 samples (4.28%) flagged by at least half of the 6 unsupervised detectors.",
+      "7 samples are flagged by ALL detectors.",
+      "Most similar detectors: elliptic_envelope / mahalanobis (Jaccard 1.00)."
+    ],
+    "plots": [
+      "outliers_boxplots",
+      "outliers_methods",
+      "outliers_votes",
+      "outliers_pca",
+      "outliers_feature_drivers"
+    ]
+  },
+  "correlation": {
+    "description": "Pearson (linear) and Spearman (rank) correlation matrices, clustered correlation blocks, top pairs, target correlation, VIF and class-conditional distributions.",
+    "pearson": {
+      "A-beta": {
+        "A-beta": 1.0,
+        "alpha-syn": 0.2663,
+        "p-tau": 0.2537,
+        "T-tau": 0.1594,
+        "P-tau/A-beta": -0.2588,
+        "T-tau/A-beta": -0.3535,
+        "P-tau/t-tau": 0.1601,
+        "UPSIT": 0.0753,
+        "REMBDSQ": -0.1155,
+        "CAUDATE_R": 0.0955,
+        "CAUDATE_L": 0.1101,
+        "PUTAMEN_R": 0.059,
+        "PUTAMEN_L": 0.0804
+      },
+      "alpha-syn": {
+        "A-beta": 0.2663,
+        "alpha-syn": 1.0,
+        "p-tau": 0.3064,
+        "T-tau": 0.7238,
+        "P-tau/A-beta": 0.2173,
+        "T-tau/A-beta": 0.4051,
+        "P-tau/t-tau": -0.1762,
+        "UPSIT": 0.1082,
+        "REMBDSQ": -0.049,
+        "CAUDATE_R": 0.0818,
+        "CAUDATE_L": 0.1005,
+        "PUTAMEN_R": 0.1203,
+        "PUTAMEN_L": 0.1384
+      },
+      "p-tau": {
+        "A-beta": 0.2537,
+        "alpha-syn": 0.3064,
+        "p-tau": 1.0,
+        "T-tau": 0.4413,
+        "P-tau/A-beta": 0.7485,
+        "T-tau/A-beta": 0.3239,
+        "P-tau/t-tau": 0.7062,
+        "UPSIT": 0.0887,
+        "REMBDSQ": -0.028,
+        "CAUDATE_R": 0.0504,
+        "CAUDATE_L": 0.063,
+        "PUTAMEN_R": 0.0775,
+        "PUTAMEN_L": 0.0794
+      },
+      "T-tau": {
+        "A-beta": 0.1594,
+        "alpha-syn": 0.7238,
+        "p-tau": 0.4413,
+        "T-tau": 1.0,
+        "P-tau/A-beta": 0.4429,
+        "T-tau/A-beta": 0.7087,
+        "P-tau/t-tau": -0.2222,
+        "UPSIT": 0.0536,
+        "REMBDSQ": -0.0245,
+        "CAUDATE_R": 0.0829,
+        "CAUDATE_L": 0.1066,
+        "PUTAMEN_R": 0.1049,
+        "PUTAMEN_L": 0.122
+      },
+      "P-tau/A-beta": {
+        "A-beta": -0.2588,
+        "alpha-syn": 0.2173,
+        "p-tau": 0.7485,
+        "T-tau": 0.4429,
+        "P-tau/A-beta": 1.0,
+        "T-tau/A-beta": 0.7321,
+        "P-tau/t-tau": 0.4464,
+        "UPSIT": 0.0578,
+        "REMBDSQ": 0.0145,
+        "CAUDATE_R": 0.0221,
+        "CAUDATE_L": 0.0307,
+        "PUTAMEN_R": 0.0709,
+        "PUTAMEN_L": 0.0728
+      },
+      "T-tau/A-beta": {
+        "A-beta": -0.3535,
+        "alpha-syn": 0.4051,
+        "p-tau": 0.3239,
+        "T-tau": 0.7087,
+        "P-tau/A-beta": 0.7321,
+        "T-tau/A-beta": 1.0,
+        "P-tau/t-tau": -0.1484,
+        "UPSIT": 0.0378,
+        "REMBDSQ": 0.0336,
+        "CAUDATE_R": 0.0427,
+        "CAUDATE_L": 0.055,
+        "PUTAMEN_R": 0.0805,
+        "PUTAMEN_L": 0.0927
+      },
+      "P-tau/t-tau": {
+        "A-beta": 0.1601,
+        "alpha-syn": -0.1762,
+        "p-tau": 0.7062,
+        "T-tau": -0.2222,
+        "P-tau/A-beta": 0.4464,
+        "T-tau/A-beta": -0.1484,
+        "P-tau/t-tau": 1.0,
+        "UPSIT": 0.0536,
+        "REMBDSQ": 0.0048,
+        "CAUDATE_R": 0.0088,
+        "CAUDATE_L": 0.0083,
+        "PUTAMEN_R": 0.0151,
+        "PUTAMEN_L": 0.0129
+      },
+      "UPSIT": {
+        "A-beta": 0.0753,
+        "alpha-syn": 0.1082,
+        "p-tau": 0.0887,
+        "T-tau": 0.0536,
+        "P-tau/A-beta": 0.0578,
+        "T-tau/A-beta": 0.0378,
+        "P-tau/t-tau": 0.0536,
+        "UPSIT": 1.0,
+        "REMBDSQ": -0.1519,
+        "CAUDATE_R": 0.4432,
+        "CAUDATE_L": 0.4336,
+        "PUTAMEN_R": 0.5453,
+        "PUTAMEN_L": 0.5509
+      },
+      "REMBDSQ": {
+        "A-beta": -0.1155,
+        "alpha-syn": -0.049,
+        "p-tau": -0.028,
+        "T-tau": -0.0245,
+        "P-tau/A-beta": 0.0145,
+        "T-tau/A-beta": 0.0336,
+        "P-tau/t-tau": 0.0048,
+        "UPSIT": -0.1519,
+        "REMBDSQ": 1.0,
+        "CAUDATE_R": -0.0976,
+        "CAUDATE_L": -0.0704,
+        "PUTAMEN_R": -0.0994,
+        "PUTAMEN_L": -0.0832
+      },
+      "CAUDATE_R": {
+        "A-beta": 0.0955,
+        "alpha-syn": 0.0818,
+        "p-tau": 0.0504,
+        "T-tau": 0.0829,
+        "P-tau/A-beta": 0.0221,
+        "T-tau/A-beta": 0.0427,
+        "P-tau/t-tau": 0.0088,
+        "UPSIT": 0.4432,
+        "REMBDSQ": -0.0976,
+        "CAUDATE_R": 1.0,
+        "CAUDATE_L": 0.8627,
+        "PUTAMEN_R": 0.8257,
+        "PUTAMEN_L": 0.7506
+      },
+      "CAUDATE_L": {
+        "A-beta": 0.1101,
+        "alpha-syn": 0.1005,
+        "p-tau": 0.063,
+        "T-tau": 0.1066,
+        "P-tau/A-beta": 0.0307,
+        "T-tau/A-beta": 0.055,
+        "P-tau/t-tau": 0.0083,
+        "UPSIT": 0.4336,
+        "REMBDSQ": -0.0704,
+        "CAUDATE_R": 0.8627,
+        "CAUDATE_L": 1.0,
+        "PUTAMEN_R": 0.7657,
+        "PUTAMEN_L": 0.8391
+      },
+      "PUTAMEN_R": {
+        "A-beta": 0.059,
+        "alpha-syn": 0.1203,
+        "p-tau": 0.0775,
+        "T-tau": 0.1049,
+        "P-tau/A-beta": 0.0709,
+        "T-tau/A-beta": 0.0805,
+        "P-tau/t-tau": 0.0151,
+        "UPSIT": 0.5453,
+        "REMBDSQ": -0.0994,
+        "CAUDATE_R": 0.8257,
+        "CAUDATE_L": 0.7657,
+        "PUTAMEN_R": 1.0,
+        "PUTAMEN_L": 0.8802
+      },
+      "PUTAMEN_L": {
+        "A-beta": 0.0804,
+        "alpha-syn": 0.1384,
+        "p-tau": 0.0794,
+        "T-tau": 0.122,
+        "P-tau/A-beta": 0.0728,
+        "T-tau/A-beta": 0.0927,
+        "P-tau/t-tau": 0.0129,
+        "UPSIT": 0.5509,
+        "REMBDSQ": -0.0832,
+        "CAUDATE_R": 0.7506,
+        "CAUDATE_L": 0.8391,
+        "PUTAMEN_R": 0.8802,
+        "PUTAMEN_L": 1.0
+      }
+    },
+    "spearman": {
+      "A-beta": {
+        "A-beta": 1.0,
+        "alpha-syn": 0.3519,
+        "p-tau": 0.354,
+        "T-tau": 0.3497,
+        "P-tau/A-beta": -0.1272,
+        "T-tau/A-beta": -0.222,
+        "P-tau/t-tau": 0.0601,
+        "UPSIT": 0.0752,
+        "REMBDSQ": -0.0929,
+        "CAUDATE_R": 0.0869,
+        "CAUDATE_L": 0.1125,
+        "PUTAMEN_R": 0.0558,
+        "PUTAMEN_L": 0.0844
+      },
+      "alpha-syn": {
+        "A-beta": 0.3519,
+        "alpha-syn": 1.0,
+        "p-tau": 0.4127,
+        "T-tau": 0.7184,
+        "P-tau/A-beta": 0.216,
+        "T-tau/A-beta": 0.5003,
+        "P-tau/t-tau": -0.1972,
+        "UPSIT": 0.0765,
+        "REMBDSQ": -0.0434,
+        "CAUDATE_R": 0.0786,
+        "CAUDATE_L": 0.0842,
+        "PUTAMEN_R": 0.1086,
+        "PUTAMEN_L": 0.1246
+      },
+      "p-tau": {
+        "A-beta": 0.354,
+        "alpha-syn": 0.4127,
+        "p-tau": 1.0,
+        "T-tau": 0.5136,
+        "P-tau/A-beta": 0.8537,
+        "T-tau/A-beta": 0.2494,
+        "P-tau/t-tau": 0.5972,
+        "UPSIT": 0.07,
+        "REMBDSQ": 0.0173,
+        "CAUDATE_R": 0.0729,
+        "CAUDATE_L": 0.0915,
+        "PUTAMEN_R": 0.1031,
+        "PUTAMEN_L": 0.1238
+      },
+      "T-tau": {
+        "A-beta": 0.3497,
+        "alpha-syn": 0.7184,
+        "p-tau": 0.5136,
+        "T-tau": 1.0,
+        "P-tau/A-beta": 0.3151,
+        "T-tau/A-beta": 0.7772,
+        "P-tau/t-tau": -0.3227,
+        "UPSIT": 0.0461,
+        "REMBDSQ": -0.0226,
+        "CAUDATE_R": 0.0752,
+        "CAUDATE_L": 0.0916,
+        "PUTAMEN_R": 0.1054,
+        "PUTAMEN_L": 0.1129
+      },
+      "P-tau/A-beta": {
+        "A-beta": -0.1272,
+        "alpha-syn": 0.216,
+        "p-tau": 0.8537,
+        "T-tau": 0.3151,
+        "P-tau/A-beta": 1.0,
+        "T-tau/A-beta": 0.3524,
+        "P-tau/t-tau": 0.6315,
+        "UPSIT": 0.0218,
+        "REMBDSQ": 0.0776,
+        "CAUDATE_R": 0.0191,
+        "CAUDATE_L": 0.0319,
+        "PUTAMEN_R": 0.0621,
+        "PUTAMEN_L": 0.0764
+      },
+      "T-tau/A-beta": {
+        "A-beta": -0.222,
+        "alpha-syn": 0.5003,
+        "p-tau": 0.2494,
+        "T-tau": 0.7772,
+        "P-tau/A-beta": 0.3524,
+        "T-tau/A-beta": 1.0,
+        "P-tau/t-tau": -0.419,
+        "UPSIT": -0.0147,
+        "REMBDSQ": 0.0262,
+        "CAUDATE_R": 0.0085,
+        "CAUDATE_L": 0.0078,
+        "PUTAMEN_R": 0.0541,
+        "PUTAMEN_L": 0.0445
+      },
+      "P-tau/t-tau": {
+        "A-beta": 0.0601,
+        "alpha-syn": -0.1972,
+        "p-tau": 0.5972,
+        "T-tau": -0.3227,
+        "P-tau/A-beta": 0.6315,
+        "T-tau/A-beta": -0.419,
+        "P-tau/t-tau": 1.0,
+        "UPSIT": 0.0354,
+        "REMBDSQ": 0.025,
+        "CAUDATE_R": 0.0063,
+        "CAUDATE_L": 0.0048,
+        "PUTAMEN_R": 0.0162,
+        "PUTAMEN_L": 0.022
+      },
+      "UPSIT": {
+        "A-beta": 0.0752,
+        "alpha-syn": 0.0765,
+        "p-tau": 0.07,
+        "T-tau": 0.0461,
+        "P-tau/A-beta": 0.0218,
+        "T-tau/A-beta": -0.0147,
+        "P-tau/t-tau": 0.0354,
+        "UPSIT": 1.0,
+        "REMBDSQ": -0.1183,
+        "CAUDATE_R": 0.4634,
+        "CAUDATE_L": 0.4576,
+        "PUTAMEN_R": 0.5473,
+        "PUTAMEN_L": 0.544
+      },
+      "REMBDSQ": {
+        "A-beta": -0.0929,
+        "alpha-syn": -0.0434,
+        "p-tau": 0.0173,
+        "T-tau": -0.0226,
+        "P-tau/A-beta": 0.0776,
+        "T-tau/A-beta": 0.0262,
+        "P-tau/t-tau": 0.025,
+        "UPSIT": -0.1183,
+        "REMBDSQ": 1.0,
+        "CAUDATE_R": -0.0986,
+        "CAUDATE_L": -0.0756,
+        "PUTAMEN_R": -0.1188,
+        "PUTAMEN_L": -0.0734
+      },
+      "CAUDATE_R": {
+        "A-beta": 0.0869,
+        "alpha-syn": 0.0786,
+        "p-tau": 0.0729,
+        "T-tau": 0.0752,
+        "P-tau/A-beta": 0.0191,
+        "T-tau/A-beta": 0.0085,
+        "P-tau/t-tau": 0.0063,
+        "UPSIT": 0.4634,
+        "REMBDSQ": -0.0986,
+        "CAUDATE_R": 1.0,
+        "CAUDATE_L": 0.8345,
+        "PUTAMEN_R": 0.8376,
+        "PUTAMEN_L": 0.7032
+      },
+      "CAUDATE_L": {
+        "A-beta": 0.1125,
+        "alpha-syn": 0.0842,
+        "p-tau": 0.0915,
+        "T-tau": 0.0916,
+        "P-tau/A-beta": 0.0319,
+        "T-tau/A-beta": 0.0078,
+        "P-tau/t-tau": 0.0048,
+        "UPSIT": 0.4576,
+        "REMBDSQ": -0.0756,
+        "CAUDATE_R": 0.8345,
+        "CAUDATE_L": 1.0,
+        "PUTAMEN_R": 0.7089,
+        "PUTAMEN_L": 0.8509
+      },
+      "PUTAMEN_R": {
+        "A-beta": 0.0558,
+        "alpha-syn": 0.1086,
+        "p-tau": 0.1031,
+        "T-tau": 0.1054,
+        "P-tau/A-beta": 0.0621,
+        "T-tau/A-beta": 0.0541,
+        "P-tau/t-tau": 0.0162,
+        "UPSIT": 0.5473,
+        "REMBDSQ": -0.1188,
+        "CAUDATE_R": 0.8376,
+        "CAUDATE_L": 0.7089,
+        "PUTAMEN_R": 1.0,
+        "PUTAMEN_L": 0.7508
+      },
+      "PUTAMEN_L": {
+        "A-beta": 0.0844,
+        "alpha-syn": 0.1246,
+        "p-tau": 0.1238,
+        "T-tau": 0.1129,
+        "P-tau/A-beta": 0.0764,
+        "T-tau/A-beta": 0.0445,
+        "P-tau/t-tau": 0.022,
+        "UPSIT": 0.544,
+        "REMBDSQ": -0.0734,
+        "CAUDATE_R": 0.7032,
+        "CAUDATE_L": 0.8509,
+        "PUTAMEN_R": 0.7508,
+        "PUTAMEN_L": 1.0
+      }
+    },
+    "top_pairs": [
+      {
+        "a": "PUTAMEN_R",
+        "b": "PUTAMEN_L",
+        "pearson": 0.880243,
+        "spearman": 0.750837,
+        "strength": "very strong",
+        "direction": "positive",
+        "abs_pearson": 0.880243
+      },
+      {
+        "a": "CAUDATE_R",
+        "b": "CAUDATE_L",
+        "pearson": 0.862711,
+        "spearman": 0.834456,
+        "strength": "very strong",
+        "direction": "positive",
+        "abs_pearson": 0.862711
+      },
+      {
+        "a": "CAUDATE_L",
+        "b": "PUTAMEN_L",
+        "pearson": 0.839084,
+        "spearman": 0.850861,
+        "strength": "very strong",
+        "direction": "positive",
+        "abs_pearson": 0.839084
+      },
+      {
+        "a": "CAUDATE_R",
+        "b": "PUTAMEN_R",
+        "pearson": 0.825704,
+        "spearman": 0.837572,
+        "strength": "very strong",
+        "direction": "positive",
+        "abs_pearson": 0.825704
+      },
+      {
+        "a": "CAUDATE_L",
+        "b": "PUTAMEN_R",
+        "pearson": 0.765695,
+        "spearman": 0.708873,
+        "strength": "strong",
+        "direction": "positive",
+        "abs_pearson": 0.765695
+      },
+      {
+        "a": "CAUDATE_R",
+        "b": "PUTAMEN_L",
+        "pearson": 0.750551,
+        "spearman": 0.703198,
+        "strength": "strong",
+        "direction": "positive",
+        "abs_pearson": 0.750551
+      },
+      {
+        "a": "p-tau",
+        "b": "P-tau/A-beta",
+        "pearson": 0.748522,
+        "spearman": 0.853722,
+        "strength": "strong",
+        "direction": "positive",
+        "abs_pearson": 0.748522
+      },
+      {
+        "a": "P-tau/A-beta",
+        "b": "T-tau/A-beta",
+        "pearson": 0.732055,
+        "spearman": 0.352359,
+        "strength": "strong",
+        "direction": "positive",
+        "abs_pearson": 0.732055
+      },
+      {
+        "a": "alpha-syn",
+        "b": "T-tau",
+        "pearson": 0.723816,
+        "spearman": 0.718438,
+        "strength": "strong",
+        "direction": "positive",
+        "abs_pearson": 0.723816
+      },
+      {
+        "a": "T-tau",
+        "b": "T-tau/A-beta",
+        "pearson": 0.70868,
+        "spearman": 0.777176,
+        "strength": "strong",
+        "direction": "positive",
+        "abs_pearson": 0.70868
+      },
+      {
+        "a": "p-tau",
+        "b": "P-tau/t-tau",
+        "pearson": 0.706172,
+        "spearman": 0.597166,
+        "strength": "strong",
+        "direction": "positive",
+        "abs_pearson": 0.706172
+      },
+      {
+        "a": "UPSIT",
+        "b": "PUTAMEN_L",
+        "pearson": 0.550907,
+        "spearman": 0.543997,
+        "strength": "moderate",
+        "direction": "positive",
+        "abs_pearson": 0.550907
+      },
+      {
+        "a": "UPSIT",
+        "b": "PUTAMEN_R",
+        "pearson": 0.545271,
+        "spearman": 0.547302,
+        "strength": "moderate",
+        "direction": "positive",
+        "abs_pearson": 0.545271
+      },
+      {
+        "a": "P-tau/A-beta",
+        "b": "P-tau/t-tau",
+        "pearson": 0.446394,
+        "spearman": 0.631549,
+        "strength": "moderate",
+        "direction": "positive",
+        "abs_pearson": 0.446394
+      },
+      {
+        "a": "UPSIT",
+        "b": "CAUDATE_R",
+        "pearson": 0.443218,
+        "spearman": 0.463449,
+        "strength": "moderate",
+        "direction": "positive",
+        "abs_pearson": 0.443218
+      }
+    ],
+    "redundant_pairs": [
+      {
+        "a": "PUTAMEN_R",
+        "b": "PUTAMEN_L",
+        "pearson": 0.880243,
+        "spearman": 0.750837,
+        "strength": "very strong",
+        "direction": "positive",
+        "abs_pearson": 0.880243
+      },
+      {
+        "a": "CAUDATE_R",
+        "b": "CAUDATE_L",
+        "pearson": 0.862711,
+        "spearman": 0.834456,
+        "strength": "very strong",
+        "direction": "positive",
+        "abs_pearson": 0.862711
+      }
+    ],
+    "vif": [
+      {
+        "feature": "p-tau",
+        "vif": 15.328
+      },
+      {
+        "feature": "P-tau/A-beta",
+        "vif": 13.273
+      },
+      {
+        "feature": "T-tau/A-beta",
+        "vif": 10.27
+      },
+      {
+        "feature": "T-tau",
+        "vif": 9.569
+      },
+      {
+        "feature": "PUTAMEN_L",
+        "vif": 7.762
+      },
+      {
+        "feature": "PUTAMEN_R",
+        "vif": 7.215
+      },
+      {
+        "feature": "P-tau/t-tau",
+        "vif": 6.838
+      },
+      {
+        "feature": "CAUDATE_L",
+        "vif": 6.796
+      },
+      {
+        "feature": "CAUDATE_R",
+        "vif": 6.27
+      },
+      {
+        "feature": "A-beta",
+        "vif": 2.369
+      },
+      {
+        "feature": "alpha-syn",
+        "vif": 2.272
+      },
+      {
+        "feature": "UPSIT",
+        "vif": 1.519
+      },
+      {
+        "feature": "REMBDSQ",
+        "vif": 1.044
+      }
+    ],
+    "target_correlation": [
+      {
+        "feature": "PUTAMEN_L",
+        "correlation": -0.8144,
+        "abs_correlation": 0.814415
+      },
+      {
+        "feature": "PUTAMEN_R",
+        "correlation": -0.8097,
+        "abs_correlation": 0.809691
+      },
+      {
+        "feature": "CAUDATE_L",
+        "correlation": -0.6013,
+        "abs_correlation": 0.601319
+      },
+      {
+        "feature": "UPSIT",
+        "correlation": -0.6011,
+        "abs_correlation": 0.601055
+      },
+      {
+        "feature": "CAUDATE_R",
+        "correlation": -0.5922,
+        "abs_correlation": 0.592235
+      },
+      {
+        "feature": "alpha-syn",
+        "correlation": -0.174,
+        "abs_correlation": 0.173994
+      },
+      {
+        "feature": "T-tau",
+        "correlation": -0.157,
+        "abs_correlation": 0.156992
+      },
+      {
+        "feature": "T-tau/A-beta",
+        "correlation": -0.1406,
+        "abs_correlation": 0.140598
+      },
+      {
+        "feature": "REMBDSQ",
+        "correlation": 0.1231,
+        "abs_correlation": 0.12313
+      },
+      {
+        "feature": "P-tau/A-beta",
+        "correlation": -0.1097,
+        "abs_correlation": 0.109698
+      },
+      {
+        "feature": "p-tau",
+        "correlation": -0.0944,
+        "abs_correlation": 0.094425
+      },
+      {
+        "feature": "A-beta",
+        "correlation": -0.0155,
+        "abs_correlation": 0.015499
+      },
+      {
+        "feature": "P-tau/t-tau",
+        "correlation": 0.0132,
+        "abs_correlation": 0.013219
+      }
+    ],
+    "by_category": {},
+    "insights": [
+      "Redundancy / collinearity: 'PUTAMEN_R' vs 'PUTAMEN_L' (r = 0.88). Keep only one of them in a linear model.",
+      "Redundancy / collinearity: 'CAUDATE_R' vs 'CAUDATE_L' (r = 0.86). Keep only one of them in a linear model.",
+      "Very strong positive correlation: 'PUTAMEN_R' vs 'PUTAMEN_L' (r = 0.88, rho = 0.75).",
+      "Very strong positive correlation: 'CAUDATE_R' vs 'CAUDATE_L' (r = 0.86, rho = 0.83).",
+      "Very strong positive correlation: 'CAUDATE_L' vs 'PUTAMEN_L' (r = 0.84, rho = 0.85).",
+      "Very strong positive correlation: 'CAUDATE_R' vs 'PUTAMEN_R' (r = 0.83, rho = 0.84).",
+      "Strong positive correlation: 'CAUDATE_L' vs 'PUTAMEN_R' (r = 0.77, rho = 0.71).",
+      "'P-tau/A-beta' vs 'T-tau/A-beta': Pearson 0.73 but Spearman 0.35 - monotonic but non-linear (or outlier-driven).",
+      "'P-tau/A-beta' vs 'P-tau/t-tau': Pearson 0.45 but Spearman 0.63 - monotonic but non-linear (or outlier-driven).",
+      "'A-beta' vs 'T-tau': Pearson 0.16 but Spearman 0.35 - monotonic but non-linear (or outlier-driven).",
+      "'T-tau/A-beta' vs 'P-tau/t-tau': Pearson -0.15 but Spearman -0.42 - monotonic but non-linear (or outlier-driven).",
+      "High VIF (>= 10, multicollinearity): [('p-tau', 15.328), ('P-tau/A-beta', 13.273), ('T-tau/A-beta', 10.27)].",
+      "Strongest target correlates: [('PUTAMEN_L', -0.8144), ('PUTAMEN_R', -0.8097), ('CAUDATE_L', -0.6013), ('UPSIT', -0.6011), ('CAUDATE_R', -0.5922)]."
+    ],
+    "plots": [
+      "correlation_pearson",
+      "correlation_spearman",
+      "correlation_clustered",
+      "correlation_top_pairs",
+      "correlation_scatter_putamen_r__putamen_l",
+      "correlation_scatter_caudate_r__caudate_l",
+      "correlation_with_target",
+      "correlation_target_putamen_l",
+      "correlation_target_putamen_r",
+      "correlation_target_caudate_l"
+    ]
+  },
+  "kde": {
+    "description": "Kernel density estimates of continuous features with mean/median markers, modality detection, skewness and (for the strongest target correlates) class-conditional densities.",
+    "features": [
+      {
+        "feature": "A-beta",
+        "mean": 373.81,
+        "median": 372.2,
+        "std": 102.793,
+        "skew": 0.519,
+        "kurtosis": 1.489,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "alpha-syn",
+        "mean": 1963.532,
+        "median": 1797.605,
+        "std": 910.805,
+        "skew": 1.739,
+        "kurtosis": 6.531,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "p-tau",
+        "mean": 16.498,
+        "median": 13.15,
+        "std": 10.592,
+        "skew": 2.468,
+        "kurtosis": 9.245,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "T-tau",
+        "mean": 47.396,
+        "median": 42.4,
+        "std": 21.873,
+        "skew": 2.209,
+        "kurtosis": 10.181,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "P-tau/A-beta",
+        "mean": 0.047,
+        "median": 0.035,
+        "std": 0.046,
+        "skew": 7.512,
+        "kurtosis": 79.435,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "T-tau/A-beta",
+        "mean": 0.138,
+        "median": 0.111,
+        "std": 0.12,
+        "skew": 9.366,
+        "kurtosis": 134.776,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "P-tau/t-tau",
+        "mean": 0.37,
+        "median": 0.301,
+        "std": 0.214,
+        "skew": 2.539,
+        "kurtosis": 11.461,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "UPSIT",
+        "mean": 25.935,
+        "median": 27.0,
+        "std": 9.165,
+        "skew": -0.363,
+        "kurtosis": -0.99,
+        "n_peaks": 1,
+        "shape": "roughly symmetric"
+      },
+      {
+        "feature": "REMBDSQ",
+        "mean": 3.055,
+        "median": 3.0,
+        "std": 2.521,
+        "skew": 0.963,
+        "kurtosis": 0.484,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "CAUDATE_R",
+        "mean": 2.295,
+        "median": 2.25,
+        "std": 0.752,
+        "skew": 0.441,
+        "kurtosis": 0.263,
+        "n_peaks": 1,
+        "shape": "roughly symmetric"
+      },
+      {
+        "feature": "CAUDATE_L",
+        "mean": 2.314,
+        "median": 2.21,
+        "std": 0.775,
+        "skew": 0.466,
+        "kurtosis": 0.243,
+        "n_peaks": 1,
+        "shape": "roughly symmetric"
+      },
+      {
+        "feature": "PUTAMEN_R",
+        "mean": 1.252,
+        "median": 0.965,
+        "std": 0.747,
+        "skew": 0.983,
+        "kurtosis": 0.179,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      },
+      {
+        "feature": "PUTAMEN_L",
+        "mean": 1.226,
+        "median": 0.96,
+        "std": 0.75,
+        "skew": 0.986,
+        "kurtosis": 0.242,
+        "n_peaks": 1,
+        "shape": "right-skewed"
+      }
+    ],
+    "skipped": [],
+    "insights": [
+      "'A-beta' is right-skewed (skew 0.52, 1 peak(s)).",
+      "'alpha-syn' is right-skewed (skew 1.74, 1 peak(s)).",
+      "'p-tau' is right-skewed (skew 2.47, 1 peak(s)).",
+      "'T-tau' is right-skewed (skew 2.21, 1 peak(s)).",
+      "'P-tau/A-beta' is right-skewed (skew 7.51, 1 peak(s)).",
+      "'T-tau/A-beta' is right-skewed (skew 9.37, 1 peak(s)).",
+      "'P-tau/t-tau' is right-skewed (skew 2.54, 1 peak(s)).",
+      "'UPSIT' is roughly symmetric (skew -0.36, 1 peak(s))."
+    ],
+    "plots": [
+      "kde_a_beta",
+      "kde_alpha_syn",
+      "kde_p_tau",
+      "kde_t_tau",
+      "kde_p_tau_a_beta",
+      "kde_t_tau_a_beta",
+      "kde_p_tau_t_tau",
+      "kde_upsit",
+      "kde_rembdsq",
+      "kde_caudate_r",
+      "kde_caudate_l",
+      "kde_putamen_r",
+      "kde_putamen_l",
+      "kde_by_target_putamen_l",
+      "kde_by_target_putamen_r",
+      "kde_by_target_caudate_l"
+    ]
+  },
+  "model_phase": {
+    "description": "Model phase: target balance, sklearn Pipeline + ColumnTransformer, Random Forest on a stratified hold-out with 5-fold cross-validation, confusion matrix, and impurity / permutation / mutual-information feature importances.",
+    "target_balance": {
+      "target_feature": "Group (Normal/PD/SWEDD - 1/2/3)",
+      "is_balanced": 0,
+      "imbalance_ratio": 2.19,
+      "severity": "moderate imbalance",
+      "total_samples": 584,
+      "valid_samples": 584,
+      "class_counts": {
+        "1": 401,
+        "0": 183
+      },
+      "class_percentages": {
+        "1": 68.66,
+        "0": 31.34
+      }
+    },
+    "preprocessing": {
+      "numerical_features": [
+        "A-beta",
+        "alpha-syn",
+        "p-tau",
+        "T-tau",
+        "P-tau/A-beta",
+        "T-tau/A-beta",
+        "P-tau/t-tau",
+        "UPSIT",
+        "REMBDSQ",
+        "CAUDATE_R",
+        "CAUDATE_L",
+        "PUTAMEN_R",
+        "PUTAMEN_L"
+      ],
+      "categorical_features": [],
+      "pipeline": "Median imputation + StandardScaler (numeric); most-frequent imputation + OneHotEncoder (categorical).",
+      "train_test_split": "stratified 75% / 25%"
+    },
+    "evaluation": {
+      "n_train": 438,
+      "n_test": 146,
+      "accuracy": 0.9589,
+      "balanced_accuracy": 0.9641,
+      "f1_macro": 0.9534,
+      "baseline_accuracy": 0.6849,
+      "roc_auc": 0.9936,
+      "cv_balanced_accuracy_mean": 0.9478,
+      "cv_balanced_accuracy_std": 0.0172,
+      "per_class_recall": {
+        "0": 0.9783,
+        "1": 0.95
+      },
+      "confusion_matrix": [
+        [
+          45,
+          1
+        ],
+        [
+          5,
+          95
+        ]
+      ],
+      "classes": [
+        "0",
+        "1"
+      ]
+    },
+    "feature_importance": {
+      "model": "RandomForestClassifier(n_estimators=200, class_weight='balanced')",
+      "impurity_ranking": [
+        {
+          "rank": 1,
+          "feature": "PUTAMEN_L",
+          "importance": 0.34301,
+          "percentage": 34.3
+        },
+        {
+          "rank": 2,
+          "feature": "PUTAMEN_R",
+          "importance": 0.25671,
+          "percentage": 25.67
+        },
+        {
+          "rank": 3,
+          "feature": "UPSIT",
+          "importance": 0.12882,
+          "percentage": 12.88
+        },
+        {
+          "rank": 4,
+          "feature": "CAUDATE_L",
+          "importance": 0.0909,
+          "percentage": 9.09
+        },
+        {
+          "rank": 5,
+          "feature": "CAUDATE_R",
+          "importance": 0.07042,
+          "percentage": 7.04
+        },
+        {
+          "rank": 6,
+          "feature": "T-tau/A-beta",
+          "importance": 0.0199,
+          "percentage": 1.99
+        },
+        {
+          "rank": 7,
+          "feature": "alpha-syn",
+          "importance": 0.01704,
+          "percentage": 1.7
+        },
+        {
+          "rank": 8,
+          "feature": "T-tau",
+          "importance": 0.01569,
+          "percentage": 1.57
+        },
+        {
+          "rank": 9,
+          "feature": "P-tau/t-tau",
+          "importance": 0.0132,
+          "percentage": 1.32
+        },
+        {
+          "rank": 10,
+          "feature": "A-beta",
+          "importance": 0.0126,
+          "percentage": 1.26
+        },
+        {
+          "rank": 11,
+          "feature": "p-tau",
+          "importance": 0.01168,
+          "percentage": 1.17
+        },
+        {
+          "rank": 12,
+          "feature": "REMBDSQ",
+          "importance": 0.01004,
+          "percentage": 1.0
+        },
+        {
+          "rank": 13,
+          "feature": "P-tau/A-beta",
+          "importance": 0.01,
+          "percentage": 1.0
+        }
+      ],
+      "permutation_ranking": [
+        {
+          "rank": 1,
+          "feature": "PUTAMEN_R",
+          "drop_points": 26.587,
+          "std_points": 2.156
+        },
+        {
+          "rank": 2,
+          "feature": "PUTAMEN_L",
+          "drop_points": 25.77,
+          "std_points": 3.81
+        },
+        {
+          "rank": 3,
+          "feature": "CAUDATE_L",
+          "drop_points": 3.343,
+          "std_points": 0.403
+        },
+        {
+          "rank": 4,
+          "feature": "UPSIT",
+          "drop_points": 1.657,
+          "std_points": 1.159
+        },
+        {
+          "rank": 5,
+          "feature": "T-tau/A-beta",
+          "drop_points": 1.522,
+          "std_points": 0.532
+        },
+        {
+          "rank": 6,
+          "feature": "CAUDATE_R",
+          "drop_points": 1.087,
+          "std_points": 0.687
+        },
+        {
+          "rank": 7,
+          "feature": "alpha-syn",
+          "drop_points": 1.087,
+          "std_points": 0.687
+        },
+        {
+          "rank": 8,
+          "feature": "P-tau/A-beta",
+          "drop_points": 1.087,
+          "std_points": 0.687
+        },
+        {
+          "rank": 9,
+          "feature": "p-tau",
+          "drop_points": 0.87,
+          "std_points": 0.435
+        },
+        {
+          "rank": 10,
+          "feature": "REMBDSQ",
+          "drop_points": 0.217,
+          "std_points": 0.435
+        },
+        {
+          "rank": 11,
+          "feature": "A-beta",
+          "drop_points": 0.217,
+          "std_points": 0.435
+        },
+        {
+          "rank": 12,
+          "feature": "P-tau/t-tau",
+          "drop_points": 0.217,
+          "std_points": 0.435
+        },
+        {
+          "rank": 13,
+          "feature": "T-tau",
+          "drop_points": 0.0,
+          "std_points": 0.0
+        }
+      ],
+      "mutual_information_ranking": [
+        {
+          "rank": 1,
+          "feature": "PUTAMEN_L",
+          "mutual_information": 0.4304
+        },
+        {
+          "rank": 2,
+          "feature": "PUTAMEN_R",
+          "mutual_information": 0.42168
+        },
+        {
+          "rank": 3,
+          "feature": "UPSIT",
+          "mutual_information": 0.24974
+        },
+        {
+          "rank": 4,
+          "feature": "CAUDATE_L",
+          "mutual_information": 0.22332
+        },
+        {
+          "rank": 5,
+          "feature": "CAUDATE_R",
+          "mutual_information": 0.21074
+        },
+        {
+          "rank": 6,
+          "feature": "T-tau",
+          "mutual_information": 0.02964
+        },
+        {
+          "rank": 7,
+          "feature": "T-tau/A-beta",
+          "mutual_information": 0.02635
+        },
+        {
+          "rank": 8,
+          "feature": "A-beta",
+          "mutual_information": 0.0223
+        },
+        {
+          "rank": 9,
+          "feature": "P-tau/A-beta",
+          "mutual_information": 0.01692
+        },
+        {
+          "rank": 10,
+          "feature": "alpha-syn",
+          "mutual_information": 0.01454
+        },
+        {
+          "rank": 11,
+          "feature": "REMBDSQ",
+          "mutual_information": 0.01097
+        },
+        {
+          "rank": 12,
+          "feature": "p-tau",
+          "mutual_information": 0.0
+        },
+        {
+          "rank": 13,
+          "feature": "P-tau/t-tau",
+          "mutual_information": 0.0
+        }
+      ]
+    },
+    "insights": [
+      "Target 'Group (Normal/PD/SWEDD - 1/2/3)': {'1': 401, '0': 183} (moderate imbalance, ratio 2.19:1).",
+      "Hold-out: balanced accuracy 0.964, macro F1 0.953, accuracy 0.959 (majority baseline 0.685); ROC-AUC 0.994; 5-fold CV balanced accuracy 0.948 +/- 0.017.",
+      "Top impurity predictors: [('PUTAMEN_L', 34.3), ('PUTAMEN_R', 25.67), ('UPSIT', 12.88), ('CAUDATE_L', 9.09), ('CAUDATE_R', 7.04)].",
+      "Top permutation impact: 'PUTAMEN_R' (26.59 points of balanced accuracy).",
+      "Top mutual-information features: [('PUTAMEN_L', 0.4304), ('PUTAMEN_R', 0.42168), ('UPSIT', 0.24974), ('CAUDATE_L', 0.22332), ('CAUDATE_R', 0.21074)]."
+    ],
+    "plots": [
+      "model_target_balance",
+      "model_confusion_matrix",
+      "model_importance_impurity",
+      "model_importance_permutation",
+      "model_importance_mutual_info"
+    ]
+  },
+  "interpretation": {
+    "description": "Interpretation of the EDA results and the concrete actions to apply from the data description: what to fix, what to mask, what to keep for modelling, and which checks are already active in the Pipeline.",
+    "summary": "Quality score: 92.2/100 (good). 8 contradictory rows (1.37%) across 2 triggered rule(s). 9 feature(s) show noise (69.23% of those tested); mean noise-to-signal 0.4275. 25 samples (4.28%) are consensus outliers across 6 unsupervised detectors.",
+    "findings": [
+      "Quality score: 92.2/100 (good).",
+      "8 contradictory rows (1.37%) across 2 triggered rule(s).",
+      "9 feature(s) show noise (69.23% of those tested); mean noise-to-signal 0.4275.",
+      "25 samples (4.28%) are consensus outliers across 6 unsupervised detectors.",
+      "Strongest association: 'PUTAMEN_R' / 'PUTAMEN_L' (Pearson r=0.88, Spearman 0.75).",
+      "Top model driver (impurity): 'PUTAMEN_L' (34.3% of importance).",
+      "Predictive check: balanced accuracy 0.964, macro-F1 0.9534, CV 0.9478."
+    ],
+    "recommendations": [
+      {
+        "priority": "high",
+        "area": "Contradictions",
+        "finding": "8 row(s), 1.37% of the file.",
+        "action": "Correct the source values where possible; otherwise keep them masked as missing and document the domain rule that was violated."
+      },
+      {
+        "priority": "medium",
+        "area": "Class imbalance",
+        "finding": "Target imbalance ratio 2.19 (moderate imbalance).",
+        "action": "Use class weights and stratified CV (already configured) and report balanced accuracy / macro-F1 rather than raw accuracy."
+      },
+      {
+        "priority": "medium",
+        "area": "Noise",
+        "finding": "69.23% of tested features are flagged as noisy.",
+        "action": "Review the measurement protocol for the highest-NSR features; aggregate repeated readings or apply smoothing, and prefer robust scaling/tree models."
+      },
+      {
+        "priority": "medium",
+        "area": "Outliers",
+        "finding": "4.28% of samples are consensus outliers.",
+        "action": "Inspect them with the domain expert; use robust models or winsorisation only when extremes are confirmed to be measurement errors."
+      },
+      {
+        "priority": "medium",
+        "area": "Redundant features",
+        "finding": "'PUTAMEN_R' and 'PUTAMEN_L' are strongly correlated (r=0.88).",
+        "action": "Keep one of the pair, combine them, or use PCA / regularisation to avoid unstable importance and multicollinearity."
+      },
+      {
+        "priority": "low",
+        "area": "Feature importance",
+        "finding": "'PUTAMEN_L' is the strongest impurity driver; permutation top is 'PUTAMEN_R'.",
+        "action": "Retain the top drivers but confirm they are available at prediction time; drop features whose permutation importance is near zero."
+      }
+    ],
+    "preprocessing_plan": [
+      {
+        "step": "Physical range validation",
+        "status": "applied",
+        "reason": "0 impossible reading(s) masked before statistics"
+      },
+      {
+        "step": "Contradiction masking",
+        "status": "applied",
+        "reason": "8 contradictory row(s) excluded from later statistics"
+      },
+      {
+        "step": "Median / mode imputation",
+        "status": "applied",
+        "reason": "Numeric median and categorical most-frequent imputation in the Pipeline"
+      },
+      {
+        "step": "StandardScaler + OneHotEncoder",
+        "status": "applied",
+        "reason": "Preprocessing inside the sklearn ColumnTransformer"
+      },
+      {
+        "step": "Stratified hold-out + cross-validation",
+        "status": "applied",
+        "reason": "75/25 stratified split and 5-fold CV"
+      },
+      {
+        "step": "Drop exact duplicates",
+        "status": "recommended",
+        "reason": "0 duplicate row(s) detected"
+      },
+      {
+        "step": "Re-code hidden zeros as missing",
+        "status": "recommended",
+        "reason": "0 placeholder zero(s) detected"
+      },
+      {
+        "step": "Remove redundant features",
+        "status": "recommended",
+        "reason": "4 pair(s) with |r| >= 0.8"
+      },
+      {
+        "step": "Outlier review / robust modelling",
+        "status": "recommended",
+        "reason": "25 consensus outlier(s)"
+      }
+    ],
+    "insights": [
+      "Quality score: 92.2/100 (good).",
+      "8 contradictory rows (1.37%) across 2 triggered rule(s).",
+      "9 feature(s) show noise (69.23% of those tested); mean noise-to-signal 0.4275.",
+      "25 samples (4.28%) are consensus outliers across 6 unsupervised detectors.",
+      "Strongest association: 'PUTAMEN_R' / 'PUTAMEN_L' (Pearson r=0.88, Spearman 0.75).",
+      "Top model driver (impurity): 'PUTAMEN_L' (34.3% of importance).",
+      "Predictive check: balanced accuracy 0.964, macro-F1 0.9534, CV 0.9478.",
+      "First action (high): Correct the source values where possible; otherwise keep them masked as missing and document the domain rule that was violated."
+    ],
+    "plots": [
+      "interpretation_priorities"
+    ]
+  },
+  "plots": [
+    {
+      "name": "contradictions_rules",
+      "title": "Contradiction rules",
+      "section": "contradictions",
+      "file": "eda_output_parkinson\\plots\\contradictions_rules.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "contradictions_per_row",
+      "title": "Contradictions per row",
+      "section": "contradictions",
+      "file": "eda_output_parkinson\\plots\\contradictions_per_row.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "contradiction_ptau_gt_ttau",
+      "title": "p-tau greater than total tau",
+      "section": "contradictions",
+      "file": "eda_output_parkinson\\plots\\contradiction_ptau_gt_ttau.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_boxplots",
+      "title": "Standardised boxplots",
+      "section": "outliers",
+      "file": "eda_output_parkinson\\plots\\outliers_boxplots.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_methods",
+      "title": "Outlier detector comparison",
+      "section": "outliers",
+      "file": "eda_output_parkinson\\plots\\outliers_methods.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_votes",
+      "title": "Detector agreement",
+      "section": "outliers",
+      "file": "eda_output_parkinson\\plots\\outliers_votes.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_pca",
+      "title": "PCA anomaly map",
+      "section": "outliers",
+      "file": "eda_output_parkinson\\plots\\outliers_pca.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_feature_drivers",
+      "title": "Feature-level anomalies",
+      "section": "outliers",
+      "file": "eda_output_parkinson\\plots\\outliers_feature_drivers.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_levels",
+      "title": "Noise level per feature",
+      "section": "noise",
+      "file": "eda_output_parkinson\\plots\\noise_levels.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_residual_t_tau_a_beta",
+      "title": "Noise residual - T-tau/A-beta",
+      "section": "noise",
+      "file": "eda_output_parkinson\\plots\\noise_residual_t_tau_a_beta.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_residual_p_tau_a_beta",
+      "title": "Noise residual - P-tau/A-beta",
+      "section": "noise",
+      "file": "eda_output_parkinson\\plots\\noise_residual_p_tau_a_beta.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_residual_rembdsq",
+      "title": "Noise residual - REMBDSQ",
+      "section": "noise",
+      "file": "eda_output_parkinson\\plots\\noise_residual_rembdsq.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_vs_signal",
+      "title": "Noise vs signal spread",
+      "section": "noise",
+      "file": "eda_output_parkinson\\plots\\noise_vs_signal.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_pearson",
+      "title": "Pearson correlation heatmap",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_pearson.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_spearman",
+      "title": "Spearman correlation heatmap",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_spearman.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_clustered",
+      "title": "Clustered correlation",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_clustered.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_top_pairs",
+      "title": "Strongest correlation pairs",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_top_pairs.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_scatter_putamen_r__putamen_l",
+      "title": "Scatter PUTAMEN_R vs PUTAMEN_L",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_scatter_putamen_r__putamen_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_scatter_caudate_r__caudate_l",
+      "title": "Scatter CAUDATE_R vs CAUDATE_L",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_scatter_caudate_r__caudate_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_with_target",
+      "title": "Correlation with target",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_with_target.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_target_putamen_l",
+      "title": "PUTAMEN_L by target",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_target_putamen_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_target_putamen_r",
+      "title": "PUTAMEN_R by target",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_target_putamen_r.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_target_caudate_l",
+      "title": "CAUDATE_L by target",
+      "section": "correlation",
+      "file": "eda_output_parkinson\\plots\\correlation_target_caudate_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_a_beta",
+      "title": "KDE of A-beta",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_a_beta.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_alpha_syn",
+      "title": "KDE of alpha-syn",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_alpha_syn.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_p_tau",
+      "title": "KDE of p-tau",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_p_tau.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_t_tau",
+      "title": "KDE of T-tau",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_t_tau.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_p_tau_a_beta",
+      "title": "KDE of P-tau/A-beta",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_p_tau_a_beta.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_t_tau_a_beta",
+      "title": "KDE of T-tau/A-beta",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_t_tau_a_beta.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_p_tau_t_tau",
+      "title": "KDE of P-tau/t-tau",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_p_tau_t_tau.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_upsit",
+      "title": "KDE of UPSIT",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_upsit.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_rembdsq",
+      "title": "KDE of REMBDSQ",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_rembdsq.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_caudate_r",
+      "title": "KDE of CAUDATE_R",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_caudate_r.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_caudate_l",
+      "title": "KDE of CAUDATE_L",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_caudate_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_putamen_r",
+      "title": "KDE of PUTAMEN_R",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_putamen_r.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_putamen_l",
+      "title": "KDE of PUTAMEN_L",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_putamen_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_by_target_putamen_l",
+      "title": "KDE of PUTAMEN_L by target",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_by_target_putamen_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_by_target_putamen_r",
+      "title": "KDE of PUTAMEN_R by target",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_by_target_putamen_r.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_by_target_caudate_l",
+      "title": "KDE of CAUDATE_L by target",
+      "section": "kde",
+      "file": "eda_output_parkinson\\plots\\kde_by_target_caudate_l.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "model_target_balance",
+      "title": "Target class balance",
+      "section": "model_phase",
+      "file": "eda_output_parkinson\\plots\\model_target_balance.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "model_confusion_matrix",
+      "title": "Confusion matrix",
+      "section": "model_phase",
+      "file": "eda_output_parkinson\\plots\\model_confusion_matrix.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "model_importance_impurity",
+      "title": "Impurity importance (Random Forest)",
+      "section": "model_phase",
+      "file": "eda_output_parkinson\\plots\\model_importance_impurity.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "model_importance_permutation",
+      "title": "Permutation importance (test set)",
+      "section": "model_phase",
+      "file": "eda_output_parkinson\\plots\\model_importance_permutation.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "model_importance_mutual_info",
+      "title": "Mutual information",
+      "section": "model_phase",
+      "file": "eda_output_parkinson\\plots\\model_importance_mutual_info.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "data_quality_indicators",
+      "title": "Data quality indicators",
+      "section": "data_quality",
+      "file": "eda_output_parkinson\\plots\\data_quality_indicators.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "interpretation_priorities",
+      "title": "Recommendations by priority",
+      "section": "interpretation",
+      "file": "eda_output_parkinson\\plots\\interpretation_priorities.png",
+      "mime": "image/png"
+    }
+  ]
+}

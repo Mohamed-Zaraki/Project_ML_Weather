@@ -1,4 +1,4 @@
-"""weather_view.py : vue Streamlit en lecture seule du rapport météo stocké dans weather.db.
+"""weather_view.py : vue Streamlit en lecture seule du rapport météo stocké dans data.db.
 
 Ne dépend que de weather_db.WeatherDB (aucun calcul statistique ici).
 Utilisation autonome :  streamlit run weather_view.py
@@ -17,7 +17,9 @@ import streamlit as st
 from theme import ACCENT_2, MUTED, apply_theme, attention_list, hero, kpi_row, section_title
 from weather_db import WeatherDB
 
-DEFAULT_DB = Path(os.environ.get("WEATHER_DB", Path(__file__).parent / "weather.db"))
+DEFAULT_DB = Path(os.environ.get("DATA_DB")
+                  or os.environ.get("WEATHER_DB")
+                  or Path(__file__).parent / "data.db")
 ACCENT = "#0E6B6F"
 
 VERDICT = {
@@ -395,14 +397,14 @@ def render_weather(db_path: str | Path = DEFAULT_DB, show_header: bool = True) -
     path = str(db_path)
     if not Path(path).exists():
         st.error(f"Base introuvable : {path}")
-        st.caption("Placez weather.db à côté de l'application ou définissez WEATHER_DB=/chemin/weather.db.")
+        st.caption("Placez data.db à côté de l'application ou définissez DATA_DB=/chemin/data.db.")
         return None
     reports = _reports(path)
     if not reports:
-        st.info("weather.db ne contient aucun rapport.")
+        st.info("data.db ne contient aucun rapport.")
         return None
 
-    # Liste de tous les rapports sauvegardés dans weather.db (du plus récent au plus ancien)
+    # Liste des rapports météo sauvegardés dans data.db (du plus récent au plus ancien)
     ids = [r["report_id"] for r in reports]
     labels = {r["report_id"]: f"{r['generated_at'][:16].replace('T', ' ')} · {r['dataset']} · {r['n_rows']:,} lignes".replace(",", " ")
               for r in reports}

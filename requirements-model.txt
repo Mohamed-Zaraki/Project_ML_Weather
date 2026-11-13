@@ -1,4 +1,4 @@
-# Pour générer un rapport : python weather_db.py weatherHistory.csv weather.db
+# Pour générer un rapport : python weather_db.py weatherHistory.csv data.db
 -r requirements.txt
 scikit-learn>=1.4.0
 matplotlib>=3.7.0

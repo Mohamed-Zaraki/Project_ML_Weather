@@ -2,7 +2,7 @@
 
 Responsibilities
 ----------------
-* Store and read datasets from SQLite database (weather.db).
+* Store and read datasets from the SQLite database (data.db via data.py).
 * Allows browsing all decompressed & stored datasets (Covid19, Parkinson, Heart Disease,
   Weather, Solar, Electrical Load, etc.).
 * Category filter + search filter.
@@ -13,177 +13,47 @@ Responsibilities
 from __future__ import annotations
 
 import io
-import json
-import sqlite3
-from contextlib import contextmanager
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
+from data import DataDB
 from theme import ACCENT, hero, kpi_row, section_title
-
-DATASET_SCHEMA = """
-CREATE TABLE IF NOT EXISTS datasets (
-    id               INTEGER PRIMARY KEY AUTOINCREMENT,
-    category         TEXT NOT NULL,
-    name             TEXT NOT NULL,
-    filename         TEXT NOT NULL,
-    file_path        TEXT NOT NULL,
-    uploaded_at      TEXT NOT NULL,
-    n_rows           INTEGER NOT NULL,
-    n_cols           INTEGER NOT NULL,
-    columns_json     TEXT NOT NULL,
-    dtypes_json      TEXT NOT NULL,
-    sample_data_json TEXT NOT NULL,
-    describe_json    TEXT,
-    missing_json     TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_datasets_cat ON datasets(category, name);
-"""
 
 PREVIEW_MAX_ROWS = 50
 
 
-# ── Database Connection ───────────────────────────────────────────────────────
-
-@contextmanager
-def _connect(db_path: str, read_only: bool = False):
-    """Yield a connection that is always closed cleanly."""
-    if read_only:
-        uri = Path(db_path).resolve().as_uri() + "?mode=ro"
-        con = sqlite3.connect(uri, uri=True)
-    else:
-        con = sqlite3.connect(db_path)
-    con.row_factory = sqlite3.Row
-    con.execute("PRAGMA foreign_keys = ON")
-    try:
-        with con:
-            yield con
-    finally:
-        con.close()
-
+# ── Database helpers (all SQL lives in data.py) ───────────────────────────────
 
 def _ensure_schema(db_path: str) -> None:
-    with _connect(db_path) as con:
-        con.executescript(DATASET_SCHEMA)
+    DataDB(db_path)
 
 
 def _list_categories(db_path: str) -> list[str]:
-    """Return all unique dataset categories in the database."""
     try:
-        with _connect(db_path, read_only=True) as con:
-            rows = con.execute("SELECT DISTINCT category FROM datasets ORDER BY category").fetchall()
-        return [r["category"] for r in rows if r["category"]]
+        return DataDB(db_path, read_only=True).list_categories()
     except Exception:
         return []
 
 
 def _list_datasets(db_path: str, category: str | None = None, search: str | None = None) -> list[dict]:
-    """Return stored datasets matching category and search keyword."""
     try:
-        sql = "SELECT id, category, name, filename, uploaded_at, n_rows, n_cols FROM datasets WHERE 1=1"
-        params = []
-        if category and category != "Toutes les catégories":
-            sql += " AND category = ?"
-            params.append(category)
-        if search and search.strip():
-            sql += " AND (name LIKE ? OR filename LIKE ?)"
-            pat = f"%{search.strip()}%"
-            params.extend([pat, pat])
-        sql += " ORDER BY category, name"
-
-        with _connect(db_path, read_only=True) as con:
-            rows = con.execute(sql, params).fetchall()
-        return [dict(r) for r in rows]
+        return DataDB(db_path, read_only=True).list_datasets(category=category, search=search)
     except Exception:
         return []
 
 
 def _get_dataset(db_path: str, row_id: int) -> tuple[pd.DataFrame, dict]:
-    """Return (df_sample_up_to_50, metadata) for a given dataset."""
-    with _connect(db_path, read_only=True) as con:
-        r = con.execute(
-            """
-            SELECT id, category, name, filename, file_path, uploaded_at, n_rows, n_cols,
-                   columns_json, dtypes_json, sample_data_json, describe_json, missing_json
-            FROM datasets WHERE id = ?
-            """,
-            (row_id,),
-        ).fetchone()
-
-    if r is None:
-        raise KeyError(f"Dataset {row_id} not found")
-
-    records = json.loads(r["sample_data_json"])
-    df = pd.DataFrame(records)
-
-    meta = {
-        "id": r["id"],
-        "category": r["category"],
-        "name": r["name"],
-        "filename": r["filename"],
-        "file_path": r["file_path"],
-        "uploaded_at": r["uploaded_at"],
-        "n_rows": r["n_rows"],
-        "n_cols": r["n_cols"],
-        "columns": json.loads(r["columns_json"]),
-        "dtypes": json.loads(r["dtypes_json"]),
-        "describe": json.loads(r["describe_json"]) if r["describe_json"] else None,
-        "missing": json.loads(r["missing_json"]) if r["missing_json"] else {},
-    }
-    return df, meta
+    return DataDB(db_path, read_only=True).get_dataset(row_id)
 
 
 def _save_uploaded_dataset(db_path: str, name: str, df: pd.DataFrame, category: str = "Import utilisateur") -> int:
-    """Save user-uploaded dataset into SQLite."""
-    _ensure_schema(db_path)
-    now = datetime.now(timezone.utc).isoformat()
-    n_rows, n_cols = len(df), len(df.columns)
-    columns = [str(c) for c in df.columns]
-    dtypes = {str(c): str(df[c].dtype) for c in df.columns}
-    missing = {str(c): int(df[c].isna().sum()) for c in df.columns}
-
-    num_cols = df.select_dtypes(include="number").columns
-    desc_json = json.dumps(df[num_cols].describe().round(4).to_dict(), ensure_ascii=False) if len(num_cols) > 0 else None
-
-    df_sample = df.head(PREVIEW_MAX_ROWS).copy()
-    for col in df_sample.select_dtypes(include=["datetime", "datetimetz"]).columns:
-        df_sample[col] = df_sample[col].astype(str)
-
-    sample_json = json.dumps(df_sample.to_dict(orient="records"), ensure_ascii=False, default=str)
-
-    with _connect(db_path) as con:
-        cur = con.execute(
-            """
-            INSERT INTO datasets (
-                category, name, filename, file_path, uploaded_at,
-                n_rows, n_cols, columns_json, dtypes_json,
-                sample_data_json, describe_json, missing_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                category,
-                Path(name).stem.replace("_", " ").title(),
-                name,
-                f"uploaded/{name}",
-                now,
-                n_rows,
-                n_cols,
-                json.dumps(columns, ensure_ascii=False),
-                json.dumps(dtypes, ensure_ascii=False),
-                sample_json,
-                desc_json,
-                json.dumps(missing, ensure_ascii=False),
-            ),
-        )
-        return cur.lastrowid
+    return DataDB(db_path).save_dataset(name, df, category=category)
 
 
 def _delete_dataset(db_path: str, row_id: int) -> None:
-    with _connect(db_path) as con:
-        con.execute("DELETE FROM datasets WHERE id = ?", (row_id,))
+    DataDB(db_path).delete_dataset(row_id)
 
 
 # ── UI Helpers ────────────────────────────────────────────────────────────────
