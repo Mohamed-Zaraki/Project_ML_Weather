@@ -15,6 +15,7 @@ import pandas as pd
 import streamlit as st
 
 from theme import ACCENT_2, MUTED, apply_theme, attention_list, hero, kpi_row, section_title
+from outlier_view import render_outliers_noise
 from weather_db import WeatherDB
 
 DEFAULT_DB = Path(os.environ.get("DATA_DB")
@@ -87,7 +88,8 @@ def _insights(sec: dict) -> None:
 
 def _plots_grid(rep: dict, section: str, path: str) -> None:
     """Graphiques de la section, affichés EN HAUT de l'onglet, sur 2 colonnes (visibles sans défiler)."""
-    plots = [p for p in rep.get("plots", []) if p.get("section") == section]
+    # les boxplots matplotlib sont remplacés par la version au thème du dashboard (onglet « Valeurs extrêmes »)
+    plots = [p for p in rep.get("plots", []) if p.get("section") == section and "boxplot" not in p.get("name", "").lower()]
     if not plots:
         return
     rid = rep["meta"]["report_id"]
@@ -156,10 +158,11 @@ def _sec_missing(rep, path):
 
 def _sec_outliers(rep, path):
     sec = rep["outliers"]
-    _head(sec)
     st.caption("Les valeurs signalées sont à examiner, pas à supprimer automatiquement.")
-    df = pd.DataFrame(sec["features"]).sort_values("iqr_percent", ascending=False)
-    _stretch(st.dataframe, df, hide_index=True)
+    render_outliers_noise(rep, rep["meta"]["report_id"])
+    with st.expander("Tableau complet des outliers"):
+        feats = sec.get("classical_features") or sec.get("features") or []
+        _stretch(st.dataframe, pd.DataFrame(feats).sort_values("iqr_percent", ascending=False), hide_index=True)
 
 
 def _sec_noise(rep, path):

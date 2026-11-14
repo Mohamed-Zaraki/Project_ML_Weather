@@ -88,6 +88,84 @@ def _read_upload_file(file) -> pd.DataFrame | None:
         return None
 
 
+def render_dataset_detail(db_path: str | Path, selected_id: int, key_prefix: str = "ov") -> None:
+    """Détail d'un dataset (KPI, aperçu, colonnes, statistiques, export) : partagé par la vue d'ensemble et l'accueil."""
+    db_path = str(db_path)
+    # ── Affichage des métadonnées du dataset choisi ──────────────────────
+    try:
+        df_preview, meta = _get_dataset(db_path, selected_id)
+    except KeyError:
+        st.error("Dataset introuvable.")
+        return
+
+    total_missing = sum(meta["missing"].values())
+    cols_with_missing = sum(1 for v in meta["missing"].values() if v > 0)
+    preview_count = min(PREVIEW_MAX_ROWS, len(df_preview))
+
+    # KPI row
+    kpi_row([
+        ("Catégorie", meta["category"], meta["filename"]),
+        ("Lignes totales", f"{meta['n_rows']:,}".replace(",", " "), f"Enregistré dans la base"),
+        ("Colonnes", str(meta["n_cols"]), f"{len(meta['columns'])} variables"),
+        ("Aperçu en base", f"{preview_count} lignes", f"≤ 50 instances enregistrées", "info"),
+        ("Valeurs manquantes", f"{total_missing:,}".replace(",", " "),
+         f"{cols_with_missing} col. concernée(s)" if total_missing > 0 else "Aucune valeur nulle",
+         "warn" if total_missing > 0 else "good"),
+    ])
+
+    # ── Tableau d'aperçu (50 lignes ou moins) ────────────────────────────
+    section_title("Tableau d'aperçu", f"{preview_count} lignes d'instances chargées depuis la base")
+
+    col_ctrl1, col_ctrl2 = st.columns([2, 3])
+    with col_ctrl1:
+        n_rows_slider = st.slider(
+            "Nombre de lignes d'instances à afficher",
+            min_value=min(5, preview_count),
+            max_value=max(5, preview_count),
+            value=min(preview_count, 50),
+            step=5,
+            key=f"{key_prefix}_rows_slider",
+        )
+    with col_ctrl2:
+        st.caption(
+            f"💡 Ce tableau affiche jusqu'à **{n_rows_slider} lignes** de données réelles stockées dans SQLite. "
+            f"Taille totale du dataset : **{meta['n_rows']:,} lignes**.".replace(",", " ")
+        )
+
+    # Affichage du tableau de données (50 lignes ou moins)
+    df_display = df_preview.head(n_rows_slider)
+    _stretch(st.dataframe, df_display, hide_index=False)
+
+    # ── Détail des colonnes & types ──────────────────────────────────────
+    with st.expander("📋 Informations sur les colonnes et types", expanded=False):
+        col_info = pd.DataFrame([
+            {
+                "Colonne": c,
+                "Type": meta["dtypes"].get(c, "—"),
+                "Valeurs manquantes (échantillon)": meta["missing"].get(c, 0),
+                "% manquant": round(100 * meta["missing"].get(c, 0) / max(preview_count, 1), 2),
+            }
+            for c in meta["columns"]
+        ])
+        _stretch(st.dataframe, col_info, hide_index=True)
+
+    # ── Statistiques descriptives ─────────────────────────────────────────
+    if meta.get("describe"):
+        with st.expander("📊 Statistiques numériques (describe)", expanded=False):
+            df_desc = pd.DataFrame(meta["describe"]).T.reset_index().rename(columns={"index": "Colonne"})
+            _stretch(st.dataframe, df_desc, hide_index=True)
+
+    # ── Bouton de téléchargement ──────────────────────────────────────────
+    csv_bytes = df_preview.to_csv(index=False).encode("utf-8-sig")
+    st.download_button(
+        label=f"⬇️ Télécharger l'extrait ({len(df_preview)} lignes en CSV)",
+        data=csv_bytes,
+        file_name=f"{meta['filename']}_preview.csv",
+        mime="text/csv",
+        key=f"{key_prefix}_dl_btn",
+    )
+
+
 # ── Main Render Function ──────────────────────────────────────────────────────
 
 def render_dataset_overview(db_path: str | Path) -> None:
@@ -146,79 +224,7 @@ def render_dataset_overview(db_path: str | Path) -> None:
                 st.cache_data.clear()
                 st.rerun()
 
-        # ── Affichage des métadonnées du dataset choisi ──────────────────────
-        try:
-            df_preview, meta = _get_dataset(db_path, selected_id)
-        except KeyError:
-            st.error("Dataset introuvable.")
-            return
-
-        total_missing = sum(meta["missing"].values())
-        cols_with_missing = sum(1 for v in meta["missing"].values() if v > 0)
-        preview_count = min(PREVIEW_MAX_ROWS, len(df_preview))
-
-        # KPI row
-        kpi_row([
-            ("Catégorie", meta["category"], meta["filename"]),
-            ("Lignes totales", f"{meta['n_rows']:,}".replace(",", " "), f"Enregistré dans la base"),
-            ("Colonnes", str(meta["n_cols"]), f"{len(meta['columns'])} variables"),
-            ("Aperçu en base", f"{preview_count} lignes", f"≤ 50 instances enregistrées", "info"),
-            ("Valeurs manquantes", f"{total_missing:,}".replace(",", " "),
-             f"{cols_with_missing} col. concernée(s)" if total_missing > 0 else "Aucune valeur nulle",
-             "warn" if total_missing > 0 else "good"),
-        ])
-
-        # ── Tableau d'aperçu (50 lignes ou moins) ────────────────────────────
-        section_title("Tableau d'aperçu", f"{preview_count} lignes d'instances chargées depuis la base")
-
-        col_ctrl1, col_ctrl2 = st.columns([2, 3])
-        with col_ctrl1:
-            n_rows_slider = st.slider(
-                "Nombre de lignes d'instances à afficher",
-                min_value=min(5, preview_count),
-                max_value=max(5, preview_count),
-                value=min(preview_count, 50),
-                step=5,
-                key="ov_rows_slider",
-            )
-        with col_ctrl2:
-            st.caption(
-                f"💡 Ce tableau affiche jusqu'à **{n_rows_slider} lignes** de données réelles stockées dans SQLite. "
-                f"Taille totale du dataset : **{meta['n_rows']:,} lignes**.".replace(",", " ")
-            )
-
-        # Affichage du tableau de données (50 lignes ou moins)
-        df_display = df_preview.head(n_rows_slider)
-        _stretch(st.dataframe, df_display, hide_index=False)
-
-        # ── Détail des colonnes & types ──────────────────────────────────────
-        with st.expander("📋 Informations sur les colonnes et types", expanded=False):
-            col_info = pd.DataFrame([
-                {
-                    "Colonne": c,
-                    "Type": meta["dtypes"].get(c, "—"),
-                    "Valeurs manquantes (échantillon)": meta["missing"].get(c, 0),
-                    "% manquant": round(100 * meta["missing"].get(c, 0) / max(preview_count, 1), 2),
-                }
-                for c in meta["columns"]
-            ])
-            _stretch(st.dataframe, col_info, hide_index=True)
-
-        # ── Statistiques descriptives ─────────────────────────────────────────
-        if meta.get("describe"):
-            with st.expander("📊 Statistiques numériques (describe)", expanded=False):
-                df_desc = pd.DataFrame(meta["describe"]).T.reset_index().rename(columns={"index": "Colonne"})
-                _stretch(st.dataframe, df_desc, hide_index=True)
-
-        # ── Bouton de téléchargement ──────────────────────────────────────────
-        csv_bytes = df_preview.to_csv(index=False).encode("utf-8-sig")
-        st.download_button(
-            label=f"⬇️ Télécharger l'extrait ({len(df_preview)} lignes en CSV)",
-            data=csv_bytes,
-            file_name=f"{meta['filename']}_preview.csv",
-            mime="text/csv",
-            key="ov_dl_btn",
-        )
+        render_dataset_detail(db_path, selected_id)
 
     # ── Section 2 : Importation de nouveaux datasets ──────────────────────────
     st.divider()
