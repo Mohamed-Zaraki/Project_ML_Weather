@@ -51,3 +51,26 @@ Pour ne garder que les N derniers rapports d'un dataset : `db.save_report(report
 - Évaluation sur une coupure **temporelle** (75 % passé / 25 % récent).
 - Importance par **permutation** sur la période de test (plus fiable que l'impureté quand `Temperature` et `Apparent Temperature` sont presque identiques).
 - Sur ce jeu, `Precip Type` suit une règle de température (neige si T ≤ 0 °C, pluie sinon) : le score est parfait et la prédiction triviale.
+
+## Phase II : évaluation des modèles (`model_lab.py`)
+
+Le tableau de bord expose un onglet **🧪 Éval. Modèles** qui reprend le protocole du projet
+`Projet2_Pre_Learning_ML` pour les quatre datasets médicaux :
+
+| Élément | Détail |
+|---|---|
+| Algorithmes | KNN, Random Forest (Ensemble), SVM |
+| Réglage | boucles de validation croisée explicites (k = 1…15, n_estimators = 25…200, noyaux rbf/linear/poly et C) — aucune GridSearch cachée |
+| Prétraitement | imputation médiane + OneHotEncoder + scaler choisi automatiquement (Standard / MinMax / Robust) |
+| Métriques | accuracy train/test, balanced accuracy, précision/rappel/F1 macro, ROC-AUC (binaire ou micro-moyenne), matrice de confusion |
+| Diagnostic | écart train/test : Well-Balanced / Moderate overfitting / High overfitting / Underfitting |
+| Robustesse | baseline, sans outliers (IQR), bruit gaussien 18 %, bruit → lissage gaussien, outliers injectés |
+| Artefacts | `storage/model_lab/*.pkl` (split + pipelines ajustés) et un `*_lab.json` de métadonnées |
+
+Le calcul se fait hors ligne dans `run_all_models.py` (section `model_lab` du rapport) ;
+le dashboard reste en lecture seule. Pour régénérer un dataset :
+
+```bash
+python run_all_models.py alcohol
+```
+

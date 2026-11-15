@@ -1,11 +1,11 @@
 {
   "meta": {
-    "report_id": "alcohol_20261113_121950",
+    "report_id": "alcohol_20261115_224834",
     "dataset_name": "alcohol",
     "dataset_label": "Alcohol Detection",
     "dataset_description": "",
     "csv_path": "datasets_extracted\\alcohol\\alcohol\\alcohol.csv",
-    "generated_at": "2026-11-13T12:19:50",
+    "generated_at": "2026-11-15T22:48:34",
     "n_rows": 390,
     "n_cols": 6,
     "numeric_columns": [
@@ -1684,7 +1684,7 @@
     ]
   },
   "correlation": {
-    "description": "Pearson (linear) and Spearman (rank) correlation matrices, clustered correlation blocks, top pairs, target correlation, VIF and class-conditional distributions.",
+    "description": "Pearson (linear) and Spearman (rank) correlation matrices, a strong-correlation network that groups redundant features, top pairs, target correlation, VIF and class-conditional distributions.",
     "pearson": {
       "ALCOHOL": {
         "ALCOHOL": 1.0,
@@ -1909,12 +1909,13 @@
       "Negligible positive correlation: 'ALCOHOL' vs 'TEMP_AMB' (r = 0.18, rho = 0.17).",
       "Negligible positive correlation: 'TEMP_FAC_MIN' vs 'EYES' (r = 0.18, rho = 0.14).",
       "'ALCOHOL' vs 'TEMP_FAC_MAX': Pearson 0.21 but Spearman 0.37 - monotonic but non-linear (or outlier-driven).",
+      "Correlation network (weak links): 6 link(s), top 6 links (max |r| = 0.59), among 5 feature(s); most connected feature: 'ALCOHOL' (3 link(s)). Green = positive, red = negative.",
       "Strongest target correlates: [('ALCOHOL', 0.8436), ('EYES', 0.644), ('TEMP_FAC_MAX', 0.3349), ('TEMP_AMB', 0.187), ('TEMP_FAC_MIN', 0.015)]."
     ],
     "plots": [
       "correlation_pearson",
       "correlation_spearman",
-      "correlation_clustered",
+      "correlation_network",
       "correlation_top_pairs",
       "correlation_scatter_alcohol__eyes",
       "correlation_scatter_alcohol__temp_fac_max",
@@ -2166,6 +2167,584 @@
       "model_importance_mutual_info"
     ]
   },
+  "model_lab": {
+    "description": "Modelling lab: three algorithms (KNN, Random Forest, SVM) compared with the same preprocessing (median imputation, one-hot encoding, auto-benchmarked scaler), tuned by explicit cross-validation loops (k, n_estimators, kernel/C), then evaluated on a stratified hold-out (accuracy, balanced accuracy, macro F1, ROC-AUC, overfitting gap) and stress-tested against noise and outliers (baseline / IQR-cleaned / feature noise / noise smoothed / injected outliers).",
+    "scaler": "minmax",
+    "scaler_table": [
+      {
+        "scaler": "standard",
+        "cv_balanced_accuracy": 0.9823
+      },
+      {
+        "scaler": "minmax",
+        "cv_balanced_accuracy": 0.9862
+      },
+      {
+        "scaler": "robust",
+        "cv_balanced_accuracy": 0.9823
+      }
+    ],
+    "cv_folds": 5,
+    "split": {
+      "test_size": 0.25,
+      "n_train": 292,
+      "n_test": 98,
+      "n_features": 5
+    },
+    "best_model": "KNN",
+    "models": [
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.9796,
+        "train_accuracy": 1.0,
+        "balanced_accuracy": 0.9767,
+        "cv_balanced_accuracy_mean": 0.9923,
+        "cv_balanced_accuracy_std": 0.0094,
+        "precision_macro": 0.9825,
+        "recall_macro": 0.9767,
+        "f1_macro": 0.9792,
+        "auc": 0.9871,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0182,
+            0.0182,
+            0.0727,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.8837,
+            0.9535,
+            0.9535,
+            0.9767,
+            0.9767,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            55,
+            0
+          ],
+          [
+            2,
+            41
+          ]
+        ],
+        "overfitting_status": "Well-Balanced",
+        "overfitting_badge": "success",
+        "overfitting_desc": "Train 100.0% ~ CV 99.2% ~ Test 98.0%.",
+        "model_key": "KNN",
+        "model_name": "K-Nearest Neighbors (KNN)",
+        "best_params": {
+          "n_neighbors": 7,
+          "metric": "manhattan",
+          "weights": "distance"
+        },
+        "cv_points": 12
+      },
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.9796,
+        "train_accuracy": 1.0,
+        "balanced_accuracy": 0.9767,
+        "cv_balanced_accuracy_mean": 0.9862,
+        "cv_balanced_accuracy_std": 0.0071,
+        "precision_macro": 0.9825,
+        "recall_macro": 0.9767,
+        "f1_macro": 0.9792,
+        "auc": 0.9987,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0364,
+            0.0727,
+            0.0909,
+            0.1273,
+            0.2545,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.7442,
+            0.814,
+            0.9535,
+            0.9767,
+            0.9767,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            55,
+            0
+          ],
+          [
+            2,
+            41
+          ]
+        ],
+        "overfitting_status": "Well-Balanced",
+        "overfitting_badge": "success",
+        "overfitting_desc": "Train 100.0% ~ CV 98.6% ~ Test 98.0%.",
+        "model_key": "Ensemble",
+        "model_name": "Random Forest (Ensemble)",
+        "best_params": {
+          "n_estimators": 25,
+          "max_depth": 10,
+          "class_weight": "balanced"
+        },
+        "cv_points": 4
+      },
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.9796,
+        "train_accuracy": 0.9897,
+        "balanced_accuracy": 0.9767,
+        "cv_balanced_accuracy_mean": 0.9885,
+        "cv_balanced_accuracy_std": 0.0094,
+        "precision_macro": 0.9825,
+        "recall_macro": 0.9767,
+        "f1_macro": 0.9792,
+        "auc": 0.9992,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0364,
+            0.0364,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.0233,
+            0.9767,
+            0.9767,
+            1.0,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            55,
+            0
+          ],
+          [
+            2,
+            41
+          ]
+        ],
+        "overfitting_status": "Well-Balanced",
+        "overfitting_badge": "success",
+        "overfitting_desc": "Train 99.0% ~ CV 98.8% ~ Test 98.0%.",
+        "model_key": "SVM",
+        "model_name": "Support Vector Machine (SVM)",
+        "best_params": {
+          "kernel": "linear",
+          "C": 1.0
+        },
+        "cv_points": 5
+      }
+    ],
+    "sensitivity": {
+      "KNN": [
+        {
+          "params": {
+            "n_neighbors": 1,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9685,
+          "cv_std": 0.0129
+        },
+        {
+          "params": {
+            "n_neighbors": 1,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9786,
+          "cv_std": 0.0139
+        },
+        {
+          "params": {
+            "n_neighbors": 3,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.98,
+          "cv_std": 0.0123
+        },
+        {
+          "params": {
+            "n_neighbors": 3,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.98,
+          "cv_std": 0.0123
+        },
+        {
+          "params": {
+            "n_neighbors": 5,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9862,
+          "cv_std": 0.0129
+        },
+        {
+          "params": {
+            "n_neighbors": 5,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9892,
+          "cv_std": 0.0089
+        },
+        {
+          "params": {
+            "n_neighbors": 7,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9823,
+          "cv_std": 0.011
+        },
+        {
+          "params": {
+            "n_neighbors": 7,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9923,
+          "cv_std": 0.0094
+        },
+        {
+          "params": {
+            "n_neighbors": 11,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9893,
+          "cv_std": 0.014
+        },
+        {
+          "params": {
+            "n_neighbors": 11,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9893,
+          "cv_std": 0.014
+        },
+        {
+          "params": {
+            "n_neighbors": 15,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9854,
+          "cv_std": 0.0131
+        },
+        {
+          "params": {
+            "n_neighbors": 15,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9893,
+          "cv_std": 0.014
+        }
+      ],
+      "Ensemble": [
+        {
+          "params": {
+            "n_estimators": 25,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9862,
+          "cv_std": 0.0071
+        },
+        {
+          "params": {
+            "n_estimators": 50,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9785,
+          "cv_std": 0.014
+        },
+        {
+          "params": {
+            "n_estimators": 100,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9823,
+          "cv_std": 0.0111
+        },
+        {
+          "params": {
+            "n_estimators": 200,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9815,
+          "cv_std": 0.0198
+        }
+      ],
+      "SVM": [
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 0.5,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.9815,
+          "cv_std": 0.0164
+        },
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 1.0,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.9815,
+          "cv_std": 0.0164
+        },
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 5.0,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.9792,
+          "cv_std": 0.0121
+        },
+        {
+          "params": {
+            "kernel": "linear",
+            "C": 1.0
+          },
+          "cv_balanced_accuracy": 0.9885,
+          "cv_std": 0.0094
+        },
+        {
+          "params": {
+            "kernel": "poly",
+            "C": 1.0
+          },
+          "cv_balanced_accuracy": 0.9846,
+          "cv_std": 0.0144
+        }
+      ]
+    },
+    "noise_outliers": {
+      "scenarios": {
+        "baseline": {
+          "label": "Baseline (standard)",
+          "description": "Standard deduplicated training set.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            },
+            "Ensemble": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            },
+            "SVM": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            }
+          }
+        },
+        "without_outliers": {
+          "label": "Without outliers (IQR)",
+          "description": "15 row(s) removed with the IQR rule.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            },
+            "Ensemble": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            },
+            "SVM": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            }
+          }
+        },
+        "with_noise": {
+          "label": "With feature noise",
+          "description": "18% Gaussian perturbation on every continuous feature.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            },
+            "Ensemble": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            },
+            "SVM": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            }
+          }
+        },
+        "noise_smoothed": {
+          "label": "Noise -> Gaussian smoothed",
+          "description": "Noise injected then suppressed with gaussian_filter1d (sigma=1.2).",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9388,
+              "balanced_accuracy": 0.9328,
+              "f1_macro": 0.9371
+            },
+            "Ensemble": {
+              "accuracy": 0.9388,
+              "balanced_accuracy": 0.9302,
+              "f1_macro": 0.9366
+            },
+            "SVM": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            }
+          }
+        },
+        "with_outliers": {
+          "label": "With injected outliers",
+          "description": "23 row(s) spiked at 3.5 sd on up to 3 features.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            },
+            "Ensemble": {
+              "accuracy": 0.9898,
+              "balanced_accuracy": 0.9884,
+              "f1_macro": 0.9896
+            },
+            "SVM": {
+              "accuracy": 0.9796,
+              "balanced_accuracy": 0.9767,
+              "f1_macro": 0.9792
+            }
+          }
+        }
+      },
+      "comparison": [
+        {
+          "model_key": "KNN",
+          "model_name": "K-Nearest Neighbors (KNN)",
+          "baseline_acc": 0.9796,
+          "without_outliers_acc": 0.9796,
+          "noisy_acc": 0.9796,
+          "smoothed_acc": 0.9388,
+          "outliers_acc": 0.9796,
+          "noise_delta": 0.0,
+          "smooth_recovery": -0.0408,
+          "outlier_delta": 0.0,
+          "iqr_cleanup_delta": 0.0
+        },
+        {
+          "model_key": "Ensemble",
+          "model_name": "Random Forest (Ensemble)",
+          "baseline_acc": 0.9796,
+          "without_outliers_acc": 0.9796,
+          "noisy_acc": 0.9796,
+          "smoothed_acc": 0.9388,
+          "outliers_acc": 0.9898,
+          "noise_delta": 0.0,
+          "smooth_recovery": -0.0408,
+          "outlier_delta": 0.0102,
+          "iqr_cleanup_delta": 0.0
+        },
+        {
+          "model_key": "SVM",
+          "model_name": "Support Vector Machine (SVM)",
+          "baseline_acc": 0.9796,
+          "without_outliers_acc": 0.9796,
+          "noisy_acc": 0.9796,
+          "smoothed_acc": 0.9796,
+          "outliers_acc": 0.9796,
+          "noise_delta": 0.0,
+          "smooth_recovery": 0.0,
+          "outlier_delta": 0.0,
+          "iqr_cleanup_delta": 0.0
+        }
+      ],
+      "stats": {
+        "outliers_removed": 15,
+        "outliers_injected": 23,
+        "rows_used": 292
+      }
+    },
+    "pickles": {
+      "split": "storage\\model_lab\\alcohol_20261115_224913_split.pkl",
+      "KNN": "storage\\model_lab\\alcohol_KNN_20261115_224913.pkl",
+      "Ensemble": "storage\\model_lab\\alcohol_Ensemble_20261115_224913.pkl",
+      "SVM": "storage\\model_lab\\alcohol_SVM_20261115_224913.pkl",
+      "scaler": "minmax",
+      "metadata": "storage\\model_lab\\alcohol_20261115_224913_lab.json"
+    },
+    "insights": [
+      "Scaler benchmark chose MinmaxScaler; best model: K-Nearest Neighbors (KNN) (macro F1 0.979, balanced accuracy 0.977, ROC-AUC 0.9871).",
+      "Noise stress test: accuracy change +0.0 points with Gaussian noise (K-Nearest Neighbors); smoothing then changed it by -4.1 points. IQR cleaning: +0.0 points; injected outliers: +0.0 points.",
+      "Manual tuning winners: KNN {'n_neighbors': 7, 'metric': 'manhattan', 'weights': 'distance'} -> CV 0.992; Ensemble {'n_estimators': 25, 'max_depth': 10, 'class_weight': 'balanced'} -> CV 0.986; SVM {'kernel': 'linear', 'C': 1.0} -> CV 0.989.",
+      "All three models show a train/test gap below 7 points (no overfitting flag)."
+    ],
+    "plots": [
+      "lab_benchmark",
+      "lab_overfit",
+      "lab_roc",
+      "lab_cm_knn",
+      "lab_cm_ensemble",
+      "lab_cm_svm",
+      "lab_param_sensitivity",
+      "lab_noise_outlier"
+    ]
+  },
   "interpretation": {
     "description": "Interpretation of the EDA results and the concrete actions to apply from the data description: what to fix, what to mask, what to keep for modelling, and which checks are already active in the Pipeline.",
     "summary": "Quality score: 87.9/100 (moderate). 29 contradictory rows (7.436%) across 5 triggered rule(s). 5 feature(s) show noise (100.0% of those tested); mean noise-to-signal 0.2508. 16 samples (4.1%) are consensus outliers across 6 unsupervised detectors.",
@@ -2378,10 +2957,10 @@
       "mime": "image/png"
     },
     {
-      "name": "correlation_clustered",
-      "title": "Clustered correlation",
+      "name": "correlation_network",
+      "title": "Correlation network (weak links)",
       "section": "correlation",
-      "file": "eda_output_alcohol\\plots\\correlation_clustered.png",
+      "file": "eda_output_alcohol\\plots\\correlation_network.png",
       "mime": "image/png"
     },
     {
@@ -2522,6 +3101,62 @@
       "title": "Mutual information",
       "section": "model_phase",
       "file": "eda_output_alcohol\\plots\\model_importance_mutual_info.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_benchmark",
+      "title": "Model benchmark (KNN / Ensemble / SVM)",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_benchmark.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_overfit",
+      "title": "Overfitting diagnosis (train / CV / test)",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_overfit.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_roc",
+      "title": "ROC / AUC comparison",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_roc.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_knn",
+      "title": "Confusion matrix - K-Nearest Neighbors (KNN)",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_cm_knn.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_ensemble",
+      "title": "Confusion matrix - Random Forest (Ensemble)",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_cm_ensemble.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_svm",
+      "title": "Confusion matrix - Support Vector Machine (SVM)",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_cm_svm.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_param_sensitivity",
+      "title": "Parameter sensitivity curves (manual CV loops)",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_param_sensitivity.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_noise_outlier",
+      "title": "Noise & outlier influence on accuracy",
+      "section": "model_lab",
+      "file": "eda_output_alcohol\\plots\\lab_noise_outlier.png",
       "mime": "image/png"
     },
     {

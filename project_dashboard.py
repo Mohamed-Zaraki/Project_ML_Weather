@@ -15,6 +15,7 @@ import streamlit as st
 st.set_page_config(page_title="Data Description & Quality · ML Dashboard", page_icon="📊", layout="wide")
 
 import dashboard_data as dd  # noqa: E402
+import dashboard_charts as ch  # noqa: E402
 from dataset_cards import render_dataset_cards  # noqa: E402
 from dataset_overview import render_dataset_detail  # noqa: E402
 from outlier_view import render_boxplot, render_outliers_noise  # noqa: E402
@@ -161,10 +162,13 @@ SEC_FR = {
 }
 
 
-def plots_carousel(sections: list[str], title: str | None = None) -> None:
+def plots_carousel(sections: list[str], title: str | None = None,
+                   skip: tuple[str, ...] = ()) -> None:
     """Graphiques PNG des sections données, dans l'onglet qui les concerne : un à la fois, boutons ◀ / ▶."""
     for sec in sections:
-        items = [p for p in dd.plots_for(rep) if p["section"] == sec and "boxplot" not in p["path"].stem.lower()]
+        items = [p for p in dd.plots_for(rep) if p["section"] == sec
+                 and "boxplot" not in p["path"].stem.lower()
+                 and p["path"].stem not in skip]
         if not items:
             continue
         n = len(items)
@@ -189,7 +193,128 @@ def plots_carousel(sections: list[str], title: str | None = None) -> None:
         st.image(str(items[idx]["path"]), caption=items[idx]["title"])
 
 
+def correlation_panel(rep: dict, key: str) -> None:
+    """Matrice de corrélation interactive + paires + VIF (même logique que la vue météo)."""
+    kind_label = st.radio(
+        "Coefficient",
+        ["Pearson (linéaire)", "Spearman (rangs)"],
+        horizontal=True,
+        key=f"corr_kind_{key}",
+    )
+    kind = "pearson" if kind_label.startswith("Pearson") else "spearman"
+    long = dd.corr_matrix_df(rep, kind)
+    if long.empty:
+        st.info("Ce rapport ne contient pas de matrice de corrélation exploitable.")
+        return
+
+    n = long["a"].nunique()
+    section_title(
+        f"Matrice de corrélation · {kind_label}",
+        f"{n} variables · survolez une cellule pour la valeur exacte",
+    )
+    st.altair_chart(ch.corr_heatmap(long))
+
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        section_title("Paires les plus corrélées", "triées par |r| décroissant")
+        pairs = dd.corr_pairs_df(rep, top=30)
+        if pairs.empty:
+            st.info("Pas de paires disponibles.")
+        else:
+            stretch(
+                st.dataframe,
+                pairs.rename(columns={"paire": "Paire", "pearson": "Pearson",
+                                      "spearman": "Spearman", "strength": "Force"}),
+                hide_index=True,
+            )
+    with c2:
+        section_title("Redondance (VIF)", "VIF ≥ 10 = colinéarité problématique")
+        vif = dd.vif_df(rep, top=10)
+        if vif.empty:
+            st.info("VIF non calculé pour ce rapport.")
+        else:
+            vmax = max(20.0, float(vif["vif"].max()))
+            stretch(
+                st.dataframe,
+                vif.rename(columns={"feature": "Variable", "vif": "VIF"}),
+                hide_index=True,
+                column_config={"VIF": st.column_config.ProgressColumn(
+                    "VIF", min_value=0, max_value=vmax, format="%.1f")},
+            )
+
+
+def model_lab_panel(rep: dict, key: str) -> None:
+    """Phase II modelling lab: KPIs, benchmark table, robustness deltas. Charts come from the database."""
+    lab = rep.get("model_lab") or {}
+    models = dd.lab_models_df(rep)
+    if models.empty:
+        st.info("Ce rapport ne contient pas l'étude de modélisation Phase II. "
+                "Relancez `py -3 run_all_models.py` pour la générer.")
+        return
+
+    split = lab.get("split") or {}
+    best_key = lab.get("best_model")
+    best = models[models["key"] == best_key]
+    best = best.iloc[0] if not best.empty else models.iloc[0]
+    scaler = str(lab.get("scaler") or "—").capitalize()
+    kpi_row([
+        ("Meilleur modèle", str(best["model"]).split(" (")[0],
+         f"macro F1 {best['f1']:.3f}" if pd.notna(best["f1"]) else "",
+         "good"),
+        ("Test accuracy", f"{best['test_acc'] * 100:.1f} %",
+         f"train {best['train_acc'] * 100:.1f} %" if pd.notna(best["train_acc"]) else ""),
+        ("Validation croisée", f"{best['cv'] * 100:.1f} %" if pd.notna(best["cv"]) else "n/a",
+         f"écart-type {best['cv_std'] * 100:.1f} pts" if pd.notna(best["cv_std"]) else ""),
+        ("ROC AUC", f"{best['auc']:.3f}" if pd.notna(best["auc"]) else "n/a",
+         "séparabilité probabiliste"),
+        ("Scaler retenu", f"{scaler}Scaler", f"{int(lab.get('cv_folds') or 0)} folds"),
+        ("Split", f"{split.get('n_train', '?')} / {split.get('n_test', '?')}",
+         f"{split.get('n_features', '?')} variables"),
+    ])
+
+    section_title("Benchmark des trois algorithmes",
+                  "Tuning manuel par validation croisée · évaluation sur jeu de test indépendant")
+    show = models.rename(columns={
+        "model": "Modèle", "params": "Paramètres retenus", "test_acc": "Test",
+        "train_acc": "Train", "cv": "CV", "bal_acc": "Balanced acc.", "precision": "Précision",
+        "recall": "Rappel", "f1": "F1 macro", "auc": "AUC", "status": "Diagnostic",
+    }).drop(columns=["key", "cv_std", "badge", "desc"])
+    for c in ("Test", "Train", "CV", "Balanced acc.", "Précision", "Rappel", "F1 macro"):
+        show[c] = (show[c] * 100).round(2)
+    stretch(st.dataframe, show, hide_index=True)
+
+    # Noise & outlier bar chart lives in the database (lab_noise_outlier) and
+    # is shown by the model_lab carousel below. Keep only the delta table.
+    stats = (lab.get("noise_outliers") or {}).get("stats") or {}
+    deltas = dd.lab_deltas_df(rep)
+    section_title("Écarts bruit et outliers vs baseline",
+                  f"IQR : {stats.get('outliers_removed', 0)} ligne(s) retirée(s) · "
+                  f"{stats.get('outliers_injected', 0)} outlier(s) injecté(s)")
+    if deltas.empty:
+        st.info("Aucune donnée de robustesse pour ce rapport.")
+    else:
+        stretch(st.dataframe, deltas.style.format("{:+.2f} pts", subset=deltas.columns[1:]),
+                hide_index=True)
+        st.caption("Lecture : points d'accuracy gagnés (+) ou perdus (−) par rapport à la baseline. "
+                   "« Récupération lissage » mesure ce que le filtre gaussien rattrape après ajout de bruit. "
+                   "Les graphiques (benchmark, sensibilité, bruit) sont dans les graphiques enregistrés ci-dessous.")
+
+    insights = lab.get("insights") or []
+    if insights:
+        section_title("Synthèse de l'évaluation", "Constats calculés à partir des métriques")
+        st.markdown("".join(
+            f"<div class='tl-i'><div class='tl-t'>{i + 1}. </div><div class='tl-x'>{t}</div></div>"
+            for i, t in enumerate(insights)), unsafe_allow_html=True)
+
+    if lab.get("pickles"):
+        pk = lab["pickles"]
+        section_title("Artefacts sauvegardés (pickle)", "Réutilisables sans ré-entraînement")
+        st.code("\n".join(f"{k}: {v}" for k, v in pk.items() if isinstance(v, str)) or "—",
+                language="text")
+
+
 reports = get_reports()
+
 if not reports:
     st.error("Aucun rapport trouvé. Placez ce fichier à la racine du projet (à côté de data.db et des dossiers eda_output_*).")
     st.stop()
@@ -317,8 +442,9 @@ else:
             unsafe_allow_html=True,
         )
 
-    tabs = dict(zip([7, 1, 8, 9, 10, 6, 3],
-                    st.tabs(["📋 Données", "💎 Qualité", "🔬 Outliers & Bruit", "🔗 Corrélations", "📈 Distributions", "🤖 Modèle", "⚙️ Prétraitement"])))
+    tabs = dict(zip([7, 1, 8, 9, 10, 11, 3],
+                    st.tabs(["📋 Données", "💎 Qualité", "🔬 Outliers & Bruit", "🔗 Corrélations",
+                             "📈 Distributions", "🧪 Éval. Modèles", "⚙️ Prétraitement"])))
 
 # ═════════════════════════ 1. VUE D'ENSEMBLE ═════════════════════════
 if 0 in tabs:
@@ -491,51 +617,12 @@ if 2 in tabs:
                 tooltip=["Dataset", "Métrique", alt.Tooltip("Score:Q", format=".3f")]), 300)
             stretch(st.dataframe, mt.drop(columns=["key"]), hide_index=True)
 
-# ═════════════════════════ 3b. MODÈLE (détail du dataset) ═════════════════════════
-if 6 in tabs:
-    with tabs[6]:
-        st.subheader(f"Détail des performances · {dd.label(sel)}")
-        ev = rep.get("model_phase", {}).get("evaluation")
-        if ev:
-            lift = ev["balanced_accuracy"] - ev["baseline_accuracy"]
-            kpi_row([
-                ("Balanced accuracy", f"{ev['balanced_accuracy']:.3f}", f"Baseline naïve : {ev['baseline_accuracy']:.3f}", "good"),
-                ("F1 macro", f"{ev['f1_macro']:.3f}", "Moyenne harmonique des classes"),
-                ("ROC AUC", f"{ev['roc_auc']:.4f}" if ev.get("roc_auc") is not None else "n/a", "Séparabilité probabiliste"),
-                ("Validation croisée", f"{ev['cv_balanced_accuracy_mean']:.3f}", f"± {ev['cv_balanced_accuracy_std']:.3f}"),
-                ("Gain vs baseline", f"{lift:+.3f}", "Gain net vs classifieur majoritaire", "info"),
-            ])
-        else:
-            st.info("Ce rapport ne contient pas d'évaluation du modèle standardisée.")
-
-        c1, c2 = st.columns(2)
-        with c1:
-            imp = dd.importance_df(rep)
-            if not imp.empty:
-                section_title("Importance des variables prédictives", imp["method"].iloc[0])
-                chart(alt.Chart(imp).mark_bar(cornerRadiusEnd=4, color=TEAL).encode(
-                    x=alt.X("value:Q", title="Importance"),
-                    y=alt.Y("feature:N", sort="-x", title=None),
-                    tooltip=["feature", alt.Tooltip("value:Q", format=".2f")]), max(200, 28 * len(imp)))
-        with c2:
-            bal = dd.class_balance_df(rep)
-            if not bal.empty:
-                section_title("Équilibre des classes cibles", "Distribution de la variable cible")
-                chart(alt.Chart(bal).mark_bar(cornerRadiusEnd=4, color=TEAL_2).encode(
-                    x=alt.X("classe:N", title=None, axis=alt.Axis(labelAngle=0)),
-                    y=alt.Y("effectif:Q", title="Nombre d'observations"),
-                    tooltip=["classe", "effectif", alt.Tooltip("pourcentage:Q", format=".2f")]), 240)
-
-        cm = dd.confusion_df(rep)
-        if not cm.empty:
-            section_title("Matrice de confusion", "Sur jeu de test indépendant")
-            base = alt.Chart(cm).encode(x=alt.X("prédit:N", title="Prédiction du modèle"), y=alt.Y("réel:N", title="Vérité terrain (réel)"))
-            heat = base.mark_rect(cornerRadius=6).encode(color=alt.Color("n:Q", scale=alt.Scale(range=["#EEF2FF", TEAL]), legend=None))
-            txt = base.mark_text(fontSize=16, fontWeight="bold").encode(
-                text="n:Q", color=alt.condition(alt.datum.n > float(cm["n"].max()) / 2, alt.value("white"), alt.value("#0F172A")))
-            chart(heat + txt, 260)
-
-        plots_carousel(["model_phase"])
+# ═════════════════════════ 3c. ÉVALUATION DES MODÈLES (Phase II) ═════════════════════════
+if 11 in tabs:
+    with tabs[11]:
+        model_lab_panel(rep, sel)
+        plots_carousel(["model_lab"], "Graphiques · Évaluation des modèles")
+        plots_carousel(["model_phase"], "Graphiques · Random Forest (importance des variables)")
 
 # ═════════════════════════ 4. PRÉTRAITEMENT ═════════════════════════
 if 3 in tabs:
@@ -620,7 +707,9 @@ if 8 in tabs:
 # ═════════════════════════ CORRÉLATIONS & DISTRIBUTIONS ═════════════════════════
 if 9 in tabs:
     with tabs[9]:
-        plots_carousel(["correlation"], "Graphiques · Corrélations")
+        correlation_panel(rep, sel)
+        plots_carousel(["correlation"], "Graphiques · Corrélations",
+                       skip=("correlation_pearson", "correlation_spearman"))
 if 10 in tabs:
     with tabs[10]:
         plots_carousel(["kde"], "Graphiques · Distributions")

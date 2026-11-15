@@ -198,8 +198,68 @@ def corr_pairs_df(rep: dict, top: int = 8) -> pd.DataFrame:
     return df.sort_values("abs", ascending=False).head(top)[["paire", "pearson", "spearman", "strength"]]
 
 
+def corr_matrix_df(rep: dict, kind: str = "pearson") -> pd.DataFrame:
+    """Long-format correlation matrix (a, b, value) for an Altair heatmap."""
+    corr = rep.get("correlation", {}) or {}
+    mat = corr.get(kind) or {}
+    df = pd.DataFrame(mat)
+    if df.empty:
+        return pd.DataFrame(columns=["a", "b", "value"])
+    long = df.reset_index(names="a").melt("a", var_name="b", value_name="value")
+    return long.dropna(subset=["value"])
+
+
+def vif_df(rep: dict, top: int = 10) -> pd.DataFrame:
+    """Most collinear features (VIF >= 10 are the actionable ones)."""
+    vif = (rep.get("correlation", {}) or {}).get("vif") or []
+    df = pd.DataFrame(vif)
+    return df.head(top) if not df.empty else df
+
+
 def plan_df(rep: dict) -> pd.DataFrame:
     return pd.DataFrame(rep.get("interpretation", {}).get("preprocessing_plan", []) or [])
+
+
+# ───────────────────────── modelling lab (Phase II) ─────────────────────────
+def lab_models_df(rep: dict) -> pd.DataFrame:
+    """Benchmark table: one row per algorithm (KNN / Ensemble / SVM)."""
+    lab = rep.get("model_lab") or {}
+    rows = []
+    for m in lab.get("models", []) or []:
+        params = ", ".join(f"{k}={v}" for k, v in (m.get("best_params") or {}).items())
+        rows.append({
+            "key": m.get("model_key"),
+            "model": m.get("model_name"),
+            "params": params,
+            "test_acc": m.get("test_accuracy"),
+            "train_acc": m.get("train_accuracy"),
+            "cv": m.get("cv_balanced_accuracy_mean"),
+            "cv_std": m.get("cv_balanced_accuracy_std"),
+            "bal_acc": m.get("balanced_accuracy"),
+            "precision": m.get("precision_macro"),
+            "recall": m.get("recall_macro"),
+            "f1": m.get("f1_macro"),
+            "auc": m.get("auc"),
+            "status": m.get("overfitting_status"),
+            "badge": m.get("overfitting_badge"),
+            "desc": m.get("overfitting_desc"),
+        })
+    return pd.DataFrame(rows)
+
+
+def lab_deltas_df(rep: dict) -> pd.DataFrame:
+    """Impact of each perturbation vs baseline, in accuracy points."""
+    comp = ((rep.get("model_lab") or {}).get("noise_outliers") or {}).get("comparison") or []
+    rows = []
+    for c in comp:
+        rows.append({
+            "Modèle": c.get("model_name", "").split(" (")[0],
+            "Sans outliers": (c.get("iqr_cleanup_delta") or 0) * 100,
+            "Bruit": (c.get("noise_delta") or 0) * 100,
+            "Récupération lissage": (c.get("smooth_recovery") or 0) * 100,
+            "Outliers injectés": (c.get("outlier_delta") or 0) * 100,
+        })
+    return pd.DataFrame(rows)
 
 
 def recommendations_df(rep: dict) -> pd.DataFrame:

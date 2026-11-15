@@ -20,19 +20,25 @@ Eight sections are produced (all JSON-friendly, no UI code):
   5. Noise              : noise-to-signal statistic adapted to unordered tables
                           (local k-NN residual / robust signal spread), SNR(dB),
                           Hampel spikes, stuck readings, out-of-range values
-  6. Correlation        : Pearson, Spearman, clustered heatmap, VIF, top pairs,
+  6. Correlation        : Pearson, Spearman, strong-correlation network, VIF, top pairs,
                           target correlation, class-conditional distributions
   7. KDE                : distribution shape / modality, optionally by target class
   8. Model phase        : target balance, sklearn Pipeline + ColumnTransformer,
                           stratified hold-out + cross-validation, confusion matrix,
                           impurity / permutation / mutual-information importances
+  9. Modelling lab      : KNN / Random Forest / SVM compared with manual CV tuning,
+                          scaler benchmark, ROC + confusion matrices, overfitting
+                          diagnosis and the noise & outlier robustness study
 """
 from __future__ import annotations
 
 import base64
 import io
 import json
+import os
 import re
+import time
+import uuid
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -44,7 +50,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy import stats
+from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.signal import find_peaks
+from scipy.spatial.distance import squareform
 
 from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import PCA
@@ -170,8 +178,28 @@ class BaseDatasetEDAModel:
     def _save_plot(self, fig, name: str, title: str, section: str):
         self.plots_dir.mkdir(parents=True, exist_ok=True)
         path = self.plots_dir / f"{name}.png"
-        fig.savefig(path, dpi=self.dpi, bbox_inches="tight")
+
+        # Encode in memory, then swap the file atomically.  On Windows the
+        # Search indexer / antivirus can briefly hold a freshly written PNG
+        # open for reading only, which makes a direct overwrite fail with
+        # OSError 22; writing a unique temp file and renaming avoids that.
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=self.dpi, bbox_inches="tight")
         plt.close(fig)
+        tmp = path.with_name(f".{name}.{uuid.uuid4().hex[:8]}.tmp")
+        tmp.write_bytes(buf.getvalue())
+        try:
+            for attempt in range(8):
+                try:
+                    os.replace(tmp, path)
+                    break
+                except OSError:
+                    if attempt == 7:
+                        raise
+                    time.sleep(0.15 * (attempt + 1))
+        finally:
+            tmp.unlink(missing_ok=True)
+
         entry = {"name": name, "title": title, "section": section,
                  "file": str(path), "mime": "image/png"}
         if self.embed_base64:
@@ -881,16 +909,83 @@ class BaseDatasetEDAModel:
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
         self._save_plot(fig, "correlation_spearman", "Spearman correlation heatmap", "correlation")
 
-        # Clustered heatmap: visually groups redundant blocks
-        if len(cols) >= 3:
+        # Strong-correlation network: visual alternative to the clustered heatmap.
+        # A clustermap with 30+ variables is unreadable (tiny labels, no exact
+        # values); the network keeps only the links that actually matter and
+        # orders the nodes by hierarchical clustering so redundancy groups sit
+        # together.
+        thr = 0.5
+        strong = []
+        for t in (0.5, 0.4, 0.3, 0.2):
+            cand = [p for p in pairs if abs(p["pearson"]) >= t]
+            if len(cand) >= 6:
+                strong, thr = cand, t
+                break
+        edge_note = f"|r| >= {thr:.2f}"
+        if len(strong) < 3:
+            # Weak-correlation dataset: keep the best links so the plot still
+            # says "there is little redundancy", instead of showing an empty graph.
+            strong = pairs[:6]
+            thr = min((abs(p["pearson"]) for p in strong), default=0.0)
+            edge_note = f"top {len(strong)} links (max |r| = {max((abs(p['pearson']) for p in strong), default=0.0):.2f})"
+        strong = strong[:60]
+        if len(strong) >= 3:
+            feats = sorted({p["a"] for p in strong} | {p["b"] for p in strong})
+            degree = {f: 0 for f in feats}
+            for p in strong:
+                degree[p["a"]] += 1
+                degree[p["b"]] += 1
+            # Keep the graph readable: at most 24 most-connected features.
+            if len(feats) > 24:
+                keep = set(sorted(feats, key=lambda f: -degree[f])[:24])
+                strong = [p for p in strong if p["a"] in keep and p["b"] in keep]
+                feats = sorted({p["a"] for p in strong} | {p["b"] for p in strong})
+                degree = {f: 0 for f in feats}
+                for p in strong:
+                    degree[p["a"]] += 1
+                    degree[p["b"]] += 1
             try:
-                cg = sns.clustermap(pear.fillna(0), cmap="coolwarm", center=0, vmin=-1, vmax=1,
-                                    figsize=(max(8, len(cols) * 0.72), max(7, len(cols) * 0.62)),
-                                    linewidths=0.4)
-                cg.figure.suptitle(f"Clustered correlation - {self.label}", y=1.02)
-                self._save_plot(cg.figure, "correlation_clustered", "Clustered correlation", "correlation")
+                sub = pear.loc[feats, feats].abs().fillna(0).to_numpy()
+                dist = 1.0 - sub
+                np.fill_diagonal(dist, 0.0)
+                dist = (dist + dist.T) / 2.0
+                order = leaves_list(linkage(squareform(dist, checks=False), method="average"))
+                feats = [feats[i] for i in order]
             except Exception:
-                plt.close("all")
+                pass
+            angles = np.linspace(0, 2 * np.pi, len(feats), endpoint=False) + np.pi / 2
+            pos = {f: (float(np.cos(a)), float(np.sin(a))) for f, a in zip(feats, angles)}
+            fig, ax = plt.subplots(figsize=(8.5, 8.5))
+            for p in strong:
+                if p["a"] not in pos or p["b"] not in pos:
+                    continue
+                (x1, y1), (x2, y2) = pos[p["a"]], pos[p["b"]]
+                r = abs(p["pearson"])
+                ax.plot([x1, x2], [y1, y2],
+                        color="#2B5E4B" if p["pearson"] >= 0 else "#BD4A32",
+                        lw=0.6 + 3.2 * r, alpha=0.22 + 0.6 * r, zorder=1)
+            for f, (x, y) in pos.items():
+                ax.scatter([x], [y], s=90 + 45 * degree[f], color="#5B7C99",
+                           edgecolor="white", linewidth=1.2, zorder=3)
+                ax.text(1.10 * x, 1.10 * y, f, ha="center", va="center",
+                        fontsize=7.5, zorder=4)
+            ax.set_xlim(-1.38, 1.38)
+            ax.set_ylim(-1.38, 1.38)
+            ax.set_aspect("equal")
+            ax.axis("off")
+            hub = max(degree, key=degree.get)
+            net_title = "Strong correlation network" if thr >= 0.3 else "Correlation network (weak links)"
+            count_note = "" if edge_note.startswith("top ") else f" · {len(strong)} links"
+            ax.set_title(f"{net_title} - {self.label}\n"
+                         f"{edge_note}{count_note} · "
+                         f"node size = number of links · hub: {hub}")
+            self._save_plot(fig, "correlation_network", net_title,
+                            "correlation")
+            insights.append(
+                f"{net_title}: {len(strong)} link(s), {edge_note}, among {len(feats)} "
+                f"feature(s); most connected feature: '{hub}' ({degree[hub]} link(s)). "
+                "Green = positive, red = negative."
+            )
 
         # Top pairs bar chart
         top = pairs[:12]
@@ -976,9 +1071,9 @@ class BaseDatasetEDAModel:
                     self._save_plot(fig, f"correlation_group_{slug(c)}", f"{c} by {g}", "correlation")
 
         return {
-            "description": "Pearson (linear) and Spearman (rank) correlation matrices, clustered "
-                           "correlation blocks, top pairs, target correlation, VIF and "
-                           "class-conditional distributions.",
+            "description": "Pearson (linear) and Spearman (rank) correlation matrices, a "
+                           "strong-correlation network that groups redundant features, top pairs, "
+                           "target correlation, VIF and class-conditional distributions.",
             "pearson": pear.round(4).to_dict(),
             "spearman": spear.round(4).to_dict(),
             "top_pairs": pairs[:15],
@@ -1257,6 +1352,264 @@ class BaseDatasetEDAModel:
                 "permutation_ranking": permutation,
                 "mutual_information_ranking": mutual,
             },
+            "insights": insights,
+        }
+
+    # ---------------------------------------------------------- 8b. modelling lab
+    def model_lab(self):
+        """Phase-II modelling study: KNN / Random Forest / SVM, manual tuning,
+        scaler benchmark, hold-out metrics, ROC, and the noise & outlier
+        robustness experiment (same protocol as Projet2_Pre_Learning_ML)."""
+        from model_lab import CANDIDATES, MODELS, run_lab
+
+        desc = ("Modelling lab: three algorithms (KNN, Random Forest, SVM) compared with the "
+                "same preprocessing (median imputation, one-hot encoding, auto-benchmarked "
+                "scaler), tuned by explicit cross-validation loops (k, n_estimators, kernel/C), "
+                "then evaluated on a stratified hold-out (accuracy, balanced accuracy, macro "
+                "F1, ROC-AUC, overfitting gap) and stress-tested against noise and outliers "
+                "(baseline / IQR-cleaned / feature noise / noise smoothed / injected outliers).")
+        if not self.target_present:
+            return {"description": desc, "insights": [f"Target column '{self.target_col}' not found."]}
+
+        clean = self.df_valid[self.df_valid[self.target_col].notna()].copy()
+        num_features = [c for c in self.num_cols if c in clean.columns]
+        cat_features = [c for c in self.cat_cols if c in clean.columns and c not in num_features]
+        try:
+            lab = run_lab(clean, self.target_col, num_features, cat_features,
+                          dataset_key=self.dataset_key,
+                          storage_dir=str(Path("storage") / "model_lab"))
+        except Exception as exc:  # a modelling failure must not kill the report
+            return {"description": desc,
+                    "insights": [f"Modelling lab could not run on this dataset: {exc}"]}
+
+        models = lab["models"]
+        by_key = {m["model_key"]: m for m in models}
+        best = by_key[lab["best_model"]]
+        insights = [
+            f"Scaler benchmark chose {lab['scaler'].capitalize()}Scaler; best model: "
+            f"{best['model_name']} (macro F1 {best['f1_macro']:.3f}, balanced accuracy "
+            f"{best['balanced_accuracy']:.3f}, ROC-AUC {best['auc'] if best['auc'] is not None else 'n/a'})."
+        ]
+
+        # ── Benchmark plot: accuracy / precision / recall / F1 per model
+        keys = [m["model_key"] for m in models]
+        x = np.arange(len(keys))
+        width = 0.2
+        fig, ax = plt.subplots(figsize=(8.4, 4.4))
+        for i, (field, label, color) in enumerate((
+            ("test_accuracy", "Test accuracy", PALETTE[1]),
+            ("precision_macro", "Precision (macro)", PALETTE[3]),
+            ("recall_macro", "Recall (macro)", PALETTE[4]),
+            ("f1_macro", "F1 (macro)", PALETTE[2]),
+        )):
+            vals = [by_key[k][field] * 100 for k in keys]
+            bars = ax.bar(x + (i - 1.5) * width, vals, width, label=label, color=color)
+            for b in bars:
+                ax.annotate(f"{b.get_height():.0f}", (b.get_x() + b.get_width() / 2,
+                                                      b.get_height()),
+                            xytext=(0, 2), textcoords="offset points",
+                            ha="center", fontsize=7)
+        ax.set_xticks(x)
+        ax.set_xticklabels([MODELS[k][0].split(" (")[0] for k in keys])
+        ax.set_ylabel("score (%)")
+        ax.set_ylim(0, 115)
+        ax.set_title(f"Model benchmark - {self.label}")
+        ax.grid(axis="y", linestyle=":", alpha=0.6)
+        ax.legend(ncol=4, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.09))
+        fig.subplots_adjust(bottom=0.22)
+        self._save_plot(fig, "lab_benchmark", "Model benchmark (KNN / Ensemble / SVM)",
+                        "model_lab")
+
+        # ── Overfitting diagnosis
+        fig, ax = plt.subplots(figsize=(8.4, 4.2))
+        for i, (field, label, color) in enumerate((
+            ("train_accuracy", "Train accuracy", "#93C5FD"),
+            ("cv_balanced_accuracy_mean", "5-fold CV", "#818CF8"),
+            ("test_accuracy", "Test accuracy", PALETTE[1]),
+        )):
+            vals = [(by_key[k][field] or 0) * 100 for k in keys]
+            bars = ax.bar(x + (i - 1) * 0.25, vals, 0.25, label=label, color=color)
+            for b in bars:
+                ax.annotate(f"{b.get_height():.1f}%", (b.get_x() + b.get_width() / 2,
+                                                       b.get_height()),
+                            xytext=(0, 2), textcoords="offset points",
+                            ha="center", fontsize=7.5)
+        ax.set_xticks(x)
+        ax.set_xticklabels([MODELS[k][0].split(" (")[0] for k in keys])
+        ax.set_ylabel("accuracy (%)")
+        ax.set_ylim(0, 115)
+        ax.set_title(f"Overfitting & generalization - {self.label}")
+        ax.grid(axis="y", linestyle=":", alpha=0.6)
+        ax.legend(fontsize=8, ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.08))
+        fig.subplots_adjust(bottom=0.2)
+        self._save_plot(fig, "lab_overfit", "Overfitting diagnosis (train / CV / test)",
+                        "model_lab")
+
+        # ── ROC curves
+        fig, ax = plt.subplots(figsize=(6.6, 5.0))
+        ax.plot([0, 1], [0, 1], "--", color="#94A3B8", lw=1.2, label="Random (AUC=0.50)")
+        for i, m in enumerate(models):
+            roc = m["roc"]
+            if not roc["fpr"]:
+                continue
+            auc = m["auc"]
+            ax.plot(roc["fpr"], roc["tpr"], lw=2.2, color=PALETTE[i],
+                    label=f"{m['model_name'].split(' (')[0]} (AUC={auc:.3f})"
+                          if auc is not None else m["model_name"])
+        mode = models[0]["roc"].get("mode", "binary")
+        ax.set_xlim(-0.02, 1.02)
+        ax.set_ylim(-0.02, 1.04)
+        ax.set_xlabel("False positive rate")
+        ax.set_ylabel("True positive rate")
+        ax.set_title(f"ROC curves - {self.label}"
+                     + (" (micro-average)" if mode == "micro" else ""))
+        ax.grid(True, linestyle=":", alpha=0.6)
+        ax.legend(loc="lower right", fontsize=8)
+        self._save_plot(fig, "lab_roc", "ROC / AUC comparison", "model_lab")
+
+        # ── Confusion matrix per model
+        for m in models:
+            cm = np.asarray(m["confusion_matrix"])
+            labels = m["classes"]
+            fig, ax = plt.subplots(figsize=(4.6, 4.0))
+            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False,
+                        xticklabels=labels, yticklabels=labels, ax=ax, annot_kws={"fontsize": 9})
+            ax.set_xlabel("predicted")
+            ax.set_ylabel("actual")
+            ax.set_title(f"{m['model_name'].split(' (')[0]} - test set")
+            self._save_plot(fig, f"lab_cm_{slug(m['model_key'])}",
+                            f"Confusion matrix - {m['model_name']}", "model_lab")
+
+        # ── Parameter sensitivity (k, n_estimators, kernel)
+        sens = lab["sensitivity"]
+        fig, axes = plt.subplots(1, 3, figsize=(12.6, 3.8))
+
+        knn = sens.get("KNN", [])
+        by_metric: dict[str, list[tuple[int, float]]] = {}
+        for point in knn:
+            p = point["params"]
+            if point["cv_balanced_accuracy"] is None:
+                continue
+            by_metric.setdefault(p.get("metric", "euclidean"), []).append(
+                (int(p.get("n_neighbors", 5)), point["cv_balanced_accuracy"] * 100))
+        for i, (metric, pts) in enumerate(sorted(by_metric.items())):
+            pts = sorted(pts)
+            axes[0].plot([p[0] for p in pts], [p[1] for p in pts], marker="o",
+                         color=PALETTE[i % len(PALETTE)], lw=2, label=metric)
+        axes[0].set_title("KNN: influence of k", fontsize=10, fontweight="bold")
+        axes[0].set_xlabel("n_neighbors (k)")
+        axes[0].set_ylabel("CV balanced accuracy (%)")
+        axes[0].legend(fontsize=7)
+        axes[0].grid(True, linestyle=":", alpha=0.6)
+
+        ens = [p for p in sens.get("Ensemble", []) if p["cv_balanced_accuracy"] is not None]
+        if ens:
+            axes[1].plot([p["params"].get("n_estimators") for p in ens],
+                         [p["cv_balanced_accuracy"] * 100 for p in ens],
+                         marker="s", color=PALETTE[3], lw=2)
+            axes[1].set_title("Random Forest: n_estimators", fontsize=10, fontweight="bold")
+            axes[1].set_xlabel("n_estimators")
+            axes[1].grid(True, linestyle=":", alpha=0.6)
+
+        svm_pts: dict[str, list[float]] = {}
+        for point in sens.get("SVM", []):
+            if point["cv_balanced_accuracy"] is not None:
+                svm_pts.setdefault(point["params"].get("kernel", "rbf"), []).append(
+                    point["cv_balanced_accuracy"] * 100)
+        if svm_pts:
+            names = list(svm_pts)
+            vals = [float(np.mean(svm_pts[n])) for n in names]
+            bars = axes[2].bar(names, vals, color=PALETTE[2], width=0.5)
+            for b in bars:
+                axes[2].annotate(f"{b.get_height():.1f}%",
+                                 (b.get_x() + b.get_width() / 2, b.get_height()),
+                                 xytext=(0, 3), textcoords="offset points",
+                                 ha="center", fontsize=8)
+            axes[2].set_ylim(min(vals) - 8 if vals else 0, 100)
+            axes[2].set_title("SVM: influence of kernel", fontsize=10, fontweight="bold")
+            axes[2].set_xlabel("kernel")
+            axes[2].grid(axis="y", linestyle=":", alpha=0.6)
+
+        fig.tight_layout()
+        self._save_plot(fig, "lab_param_sensitivity",
+                        "Parameter sensitivity curves (manual CV loops)", "model_lab")
+
+        # ── Noise & outlier influence
+        comp = lab["noise_outlier"]["comparison"]
+        stats = lab["noise_outlier"]["stats"]
+        scenarios = [
+            ("baseline_acc", "Baseline", PALETTE[3]),
+            ("without_outliers_acc", "No outliers (IQR)", PALETTE[1]),
+            ("noisy_acc", "Feature noise", PALETTE[2]),
+            ("smoothed_acc", "Noise -> smoothed", PALETTE[5]),
+            ("outliers_acc", "Injected outliers", PALETTE[4]),
+        ]
+        fig, ax = plt.subplots(figsize=(9.6, 4.8))
+        x = np.arange(len(comp))
+        width = 0.15
+        for i, (field, label, color) in enumerate(scenarios):
+            vals = [row[field] * 100 for row in comp]
+            bars = ax.bar(x + (i - 2) * width, vals, width, label=label, color=color)
+            for b in bars:
+                ax.annotate(f"{b.get_height():.1f}", (b.get_x() + b.get_width() / 2,
+                                                      b.get_height()),
+                            xytext=(0, 2), textcoords="offset points",
+                            ha="center", fontsize=6.5)
+        ax.set_xticks(x)
+        ax.set_xticklabels([row["model_name"].split(" (")[0] for row in comp])
+        ax.set_ylabel("test accuracy (%)")
+        ax.set_ylim(0, 105)
+        ax.set_title(f"Noise & outlier influence - {self.label}\n"
+                     f"IQR removed {stats['outliers_removed']} rows · "
+                     f"{stats['outliers_injected']} outlier rows injected")
+        ax.grid(axis="y", linestyle=":", alpha=0.6)
+        ax.legend(ncol=5, fontsize=7.5, loc="upper center", bbox_to_anchor=(0.5, -0.10))
+        fig.subplots_adjust(bottom=0.24)
+        self._save_plot(fig, "lab_noise_outlier",
+                        "Noise & outlier influence on accuracy", "model_lab")
+
+        # ── Insights
+        worst_noise = min(comp, key=lambda r: r["noise_delta"])
+        insights.append(
+            f"Noise stress test: accuracy change {worst_noise['noise_delta'] * 100:+.1f} points "
+            f"with Gaussian noise ({worst_noise['model_name'].split(' (')[0]}); smoothing then "
+            f"changed it by {worst_noise['smooth_recovery'] * 100:+.1f} points. IQR cleaning: "
+            f"{worst_noise['iqr_cleanup_delta'] * 100:+.1f} points; injected outliers: "
+            f"{worst_noise['outlier_delta'] * 100:+.1f} points."
+        )
+        tune_txt = []
+        for k in ("KNN", "Ensemble", "SVM"):
+            points = [p for p in sens.get(k, []) if p["cv_balanced_accuracy"] is not None]
+            if points:
+                top = max(points, key=lambda p: p["cv_balanced_accuracy"])
+                tune_txt.append(f"{k} {top['params']} -> CV {top['cv_balanced_accuracy']:.3f}")
+        insights.append("Manual tuning winners: " + "; ".join(tune_txt) + ".")
+        risky = [m for m in models if m["overfitting_badge"] in ("danger", "warning")]
+        if any((r["smooth_recovery"] or 0) < -0.05 for r in comp):
+            insights.append(
+                "Gaussian smoothing is applied along the row order: on a table of unrelated "
+                "patients it blurs distinct observations instead of removing sensor noise, "
+                "which is why accuracy drops - keep it for time-indexed signals only."
+            )
+        if risky:
+            insights.append("Overfitting watch: " + "; ".join(
+                f"{m['model_name'].split(' (')[0]} = {m['overfitting_status']} "
+                f"({m['overfitting_desc']})" for m in risky) + ".")
+        else:
+            insights.append("All three models show a train/test gap below 7 points "
+                            "(no overfitting flag).")
+
+        return {
+            "description": desc,
+            "scaler": lab["scaler"],
+            "scaler_table": lab["scaler_table"],
+            "cv_folds": lab["cv_folds"],
+            "split": lab["split"],
+            "best_model": lab["best_model"],
+            "models": models,
+            "sensitivity": sens,
+            "noise_outliers": lab["noise_outlier"],
+            "pickles": lab["pickles"],
             "insights": insights,
         }
 
@@ -1577,6 +1930,7 @@ class BaseDatasetEDAModel:
         self._section("correlation", self.correlation)
         self._section("kde", self.kde)
         self._section("model_phase", self.model_phase)
+        self._section("model_lab", self.model_lab)
         # These two aggregate the sections above; they are re-ordered below so a
         # Phase-I reader sees the teacher's flow: quality -> noise -> outliers ->
         # interpretation.
@@ -1585,8 +1939,8 @@ class BaseDatasetEDAModel:
         self.report["plots"] = self.plots
         order = [
             "meta", "description", "data_quality", "contradictions", "missing_duplicates",
-            "noise", "outliers", "correlation", "kde", "model_phase", "interpretation",
-            "plots",
+            "noise", "outliers", "correlation", "kde", "model_phase", "model_lab",
+            "interpretation", "plots",
         ]
         self.report = {k: self.report[k] for k in order if k in self.report}
         return clean_for_json(self.report)

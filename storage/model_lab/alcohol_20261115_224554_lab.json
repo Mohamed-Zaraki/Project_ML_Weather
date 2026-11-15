@@ -1,0 +1,29 @@
+{
+  "dataset": "alcohol",
+  "target": "CLASS",
+  "scaler": "minmax",
+  "best_model": "KNN",
+  "models": {
+    "KNN": {
+      "n_neighbors": 7,
+      "metric": "manhattan",
+      "weights": "distance"
+    },
+    "Ensemble": {
+      "n_estimators": 25,
+      "max_depth": 10,
+      "class_weight": "balanced"
+    },
+    "SVM": {
+      "kernel": "linear",
+      "C": 1.0
+    }
+  },
+  "pickles": {
+    "split": "storage\\model_lab\\alcohol_20261115_224554_split.pkl",
+    "KNN": "storage\\model_lab\\alcohol_KNN_20261115_224554.pkl",
+    "Ensemble": "storage\\model_lab\\alcohol_Ensemble_20261115_224554.pkl",
+    "SVM": "storage\\model_lab\\alcohol_SVM_20261115_224554.pkl",
+    "scaler": "minmax"
+  }
+}

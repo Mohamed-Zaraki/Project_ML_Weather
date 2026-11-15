@@ -1,11 +1,11 @@
 {
   "meta": {
-    "report_id": "covid_20261113_121909",
+    "report_id": "covid_20261115_224932",
     "dataset_name": "covid",
     "dataset_label": "COVID-19 Laboratory",
     "dataset_description": "Laboratory measurements from 1,736 patients: blood counts, liver/kidney markers, electrolytes and inflammatory markers. Target SARSCov = 0 (negative) / 1 (positive). Several columns contain missing codes (blank CK, zero ages) and one impossible calcium value.",
     "csv_path": "datasets_extracted\\Covid19\\dataset2-covid19.csv",
-    "generated_at": "2026-11-13T12:19:09",
+    "generated_at": "2026-11-15T22:49:32",
     "n_rows": 1736,
     "n_cols": 34,
     "numeric_columns": [
@@ -6310,7 +6310,7 @@
     ]
   },
   "correlation": {
-    "description": "Pearson (linear) and Spearman (rank) correlation matrices, clustered correlation blocks, top pairs, target correlation, VIF and class-conditional distributions.",
+    "description": "Pearson (linear) and Spearman (rank) correlation matrices, a strong-correlation network that groups redundant features, top pairs, target correlation, VIF and class-conditional distributions.",
     "pearson": {
       "Sex": {
         "Sex": 1.0,
@@ -9241,12 +9241,13 @@
       "'Age' vs 'UREA': Pearson 0.46 but Spearman 0.65 - monotonic but non-linear (or outlier-driven).",
       "'AST' vs 'LDH': Pearson 0.41 but Spearman 0.69 - monotonic but non-linear (or outlier-driven).",
       "High VIF (>= 10, multicollinearity): [('NE', 2230.246), ('LY', 1537.638), ('HGB', 535.38), ('HCT', 530.445), ('MO', 195.03), ('MCV', 121.532), ('MCH', 118.652), ('WBC', 78.51)].",
+      "Strong correlation network: 20 link(s), |r| >= 0.50, among 24 feature(s); most connected feature: 'NE' (5 link(s)). Green = positive, red = negative.",
       "Strongest target correlates: [('CA', -0.3926), ('BA', -0.3116), ('EOT', -0.309), ('EO', -0.3066), ('BAT', -0.2892)]."
     ],
     "plots": [
       "correlation_pearson",
       "correlation_spearman",
-      "correlation_clustered",
+      "correlation_network",
       "correlation_top_pairs",
       "correlation_scatter_hgb__hct",
       "correlation_scatter_wbc__net",
@@ -10239,6 +10240,1184 @@
       "model_importance_mutual_info"
     ]
   },
+  "model_lab": {
+    "description": "Modelling lab: three algorithms (KNN, Random Forest, SVM) compared with the same preprocessing (median imputation, one-hot encoding, auto-benchmarked scaler), tuned by explicit cross-validation loops (k, n_estimators, kernel/C), then evaluated on a stratified hold-out (accuracy, balanced accuracy, macro F1, ROC-AUC, overfitting gap) and stress-tested against noise and outliers (baseline / IQR-cleaned / feature noise / noise smoothed / injected outliers).",
+    "scaler": "standard",
+    "scaler_table": [
+      {
+        "scaler": "standard",
+        "cv_balanced_accuracy": 0.7501
+      },
+      {
+        "scaler": "minmax",
+        "cv_balanced_accuracy": 0.729
+      },
+      {
+        "scaler": "robust",
+        "cv_balanced_accuracy": 0.6831
+      }
+    ],
+    "cv_folds": 5,
+    "split": {
+      "test_size": 0.25,
+      "n_train": 1302,
+      "n_test": 434,
+      "n_features": 33
+    },
+    "best_model": "Ensemble",
+    "models": [
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.7903,
+        "train_accuracy": 0.9992,
+        "balanced_accuracy": 0.7864,
+        "cv_balanced_accuracy_mean": 0.7754,
+        "cv_balanced_accuracy_std": 0.0189,
+        "precision_macro": 0.7934,
+        "recall_macro": 0.7864,
+        "f1_macro": 0.7876,
+        "auc": 0.8502,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0174,
+            0.0174,
+            0.0261,
+            0.0261,
+            0.0304,
+            0.0304,
+            0.0348,
+            0.0348,
+            0.0391,
+            0.0391,
+            0.0435,
+            0.0435,
+            0.0478,
+            0.0478,
+            0.0565,
+            0.0565,
+            0.0609,
+            0.0609,
+            0.0652,
+            0.0652,
+            0.0696,
+            0.0696,
+            0.087,
+            0.087,
+            0.0913,
+            0.0913,
+            0.0957,
+            0.0957,
+            0.1043,
+            0.1043,
+            0.113,
+            0.113,
+            0.1217,
+            0.1217,
+            0.1261,
+            0.1261,
+            0.1348,
+            0.1348,
+            0.1391,
+            0.1391,
+            0.1435,
+            0.1435,
+            0.1522,
+            0.1522,
+            0.1739,
+            0.1739,
+            0.1783,
+            0.1783,
+            0.187,
+            0.187,
+            0.1957,
+            0.1957,
+            0.2,
+            0.2,
+            0.2348,
+            0.2348,
+            0.2478,
+            0.2478,
+            0.2609,
+            0.2609,
+            0.2696,
+            0.2696,
+            0.2739,
+            0.2739,
+            0.2913,
+            0.2913,
+            0.3043,
+            0.3043,
+            0.3087,
+            0.3087,
+            0.3174,
+            0.3174,
+            0.3217,
+            0.3217,
+            0.3391,
+            0.3391,
+            0.3522,
+            0.3522,
+            0.387,
+            0.387,
+            0.4391,
+            0.4391,
+            0.4478,
+            0.4478,
+            0.4739,
+            0.4739,
+            0.4783,
+            0.4783,
+            0.5174,
+            0.5174,
+            0.5304,
+            0.5304,
+            0.5478,
+            0.5478,
+            0.5565,
+            0.5565,
+            0.5609,
+            0.5609,
+            0.5826,
+            0.5826,
+            0.5913,
+            0.5913,
+            0.6652,
+            0.6652,
+            0.6826,
+            0.6826,
+            0.713,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.2304,
+            0.3382,
+            0.3382,
+            0.348,
+            0.348,
+            0.3824,
+            0.3824,
+            0.3873,
+            0.3873,
+            0.4755,
+            0.4755,
+            0.5245,
+            0.5245,
+            0.5294,
+            0.5294,
+            0.5343,
+            0.5343,
+            0.5441,
+            0.5441,
+            0.5637,
+            0.5637,
+            0.6176,
+            0.6176,
+            0.6225,
+            0.6225,
+            0.6373,
+            0.6373,
+            0.6569,
+            0.6569,
+            0.6667,
+            0.6667,
+            0.6716,
+            0.6716,
+            0.6961,
+            0.6961,
+            0.7059,
+            0.7059,
+            0.7108,
+            0.7108,
+            0.7157,
+            0.7157,
+            0.7206,
+            0.7206,
+            0.75,
+            0.75,
+            0.7647,
+            0.7647,
+            0.7696,
+            0.7696,
+            0.7745,
+            0.7745,
+            0.7794,
+            0.7794,
+            0.7843,
+            0.7843,
+            0.7892,
+            0.7892,
+            0.7941,
+            0.7941,
+            0.799,
+            0.799,
+            0.8137,
+            0.8137,
+            0.8186,
+            0.8186,
+            0.8235,
+            0.8235,
+            0.8284,
+            0.8284,
+            0.8333,
+            0.8333,
+            0.8431,
+            0.8431,
+            0.848,
+            0.848,
+            0.8529,
+            0.8529,
+            0.8627,
+            0.8627,
+            0.8725,
+            0.8725,
+            0.8775,
+            0.8775,
+            0.8824,
+            0.8824,
+            0.8922,
+            0.8922,
+            0.8971,
+            0.8971,
+            0.902,
+            0.902,
+            0.9118,
+            0.9118,
+            0.9167,
+            0.9167,
+            0.9216,
+            0.9216,
+            0.9265,
+            0.9265,
+            0.9363,
+            0.9363,
+            0.9412,
+            0.9412,
+            0.951,
+            0.951,
+            0.9559,
+            0.9559,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            196,
+            34
+          ],
+          [
+            57,
+            147
+          ]
+        ],
+        "overfitting_status": "High Overfitting Risk",
+        "overfitting_badge": "danger",
+        "overfitting_desc": "Train 99.9% >> Test 79.0% (gap 20.9 points).",
+        "model_key": "KNN",
+        "model_name": "K-Nearest Neighbors (KNN)",
+        "best_params": {
+          "n_neighbors": 7,
+          "metric": "manhattan",
+          "weights": "distance"
+        },
+        "cv_points": 12
+      },
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.8249,
+        "train_accuracy": 0.9754,
+        "balanced_accuracy": 0.8234,
+        "cv_balanced_accuracy_mean": 0.8051,
+        "cv_balanced_accuracy_std": 0.0163,
+        "precision_macro": 0.8248,
+        "recall_macro": 0.8234,
+        "f1_macro": 0.8239,
+        "auc": 0.8898,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0043,
+            0.0043,
+            0.0087,
+            0.0087,
+            0.013,
+            0.013,
+            0.0174,
+            0.0174,
+            0.0217,
+            0.0217,
+            0.0261,
+            0.0261,
+            0.0304,
+            0.0304,
+            0.0348,
+            0.0348,
+            0.0391,
+            0.0391,
+            0.0478,
+            0.0478,
+            0.0522,
+            0.0522,
+            0.0565,
+            0.0565,
+            0.0609,
+            0.0609,
+            0.0652,
+            0.0652,
+            0.0696,
+            0.0696,
+            0.0739,
+            0.0739,
+            0.0783,
+            0.0783,
+            0.087,
+            0.087,
+            0.0957,
+            0.0957,
+            0.1261,
+            0.1261,
+            0.1304,
+            0.1304,
+            0.1348,
+            0.1348,
+            0.1435,
+            0.1435,
+            0.1478,
+            0.1478,
+            0.1522,
+            0.1522,
+            0.1565,
+            0.1565,
+            0.1609,
+            0.1609,
+            0.1696,
+            0.1696,
+            0.1913,
+            0.1913,
+            0.2087,
+            0.2087,
+            0.213,
+            0.213,
+            0.2217,
+            0.2217,
+            0.2609,
+            0.2609,
+            0.3391,
+            0.3391,
+            0.3739,
+            0.3739,
+            0.4043,
+            0.4043,
+            0.4087,
+            0.4087,
+            0.4217,
+            0.4217,
+            0.4304,
+            0.4304,
+            0.4522,
+            0.4522,
+            0.4652,
+            0.4652,
+            0.487,
+            0.487,
+            0.5,
+            0.5,
+            0.5348,
+            0.5348,
+            0.5696,
+            0.5696,
+            0.6217,
+            0.6217,
+            0.6261,
+            0.6261,
+            0.6609,
+            0.6609,
+            0.6739,
+            0.6739,
+            0.7217,
+            0.7435,
+            0.7739,
+            0.7913,
+            0.8,
+            0.8043,
+            0.813,
+            0.8739,
+            0.8739,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.0049,
+            0.0784,
+            0.0784,
+            0.1814,
+            0.1814,
+            0.1961,
+            0.1961,
+            0.3137,
+            0.3137,
+            0.3284,
+            0.3284,
+            0.3627,
+            0.3627,
+            0.402,
+            0.402,
+            0.4363,
+            0.4363,
+            0.451,
+            0.451,
+            0.4951,
+            0.4951,
+            0.5098,
+            0.5098,
+            0.5833,
+            0.5833,
+            0.6422,
+            0.6422,
+            0.6618,
+            0.6618,
+            0.6716,
+            0.6716,
+            0.6863,
+            0.6863,
+            0.701,
+            0.701,
+            0.7108,
+            0.7108,
+            0.7353,
+            0.7353,
+            0.7402,
+            0.7402,
+            0.75,
+            0.75,
+            0.7598,
+            0.7598,
+            0.7647,
+            0.7647,
+            0.7794,
+            0.7794,
+            0.7843,
+            0.7843,
+            0.799,
+            0.799,
+            0.8088,
+            0.8088,
+            0.8235,
+            0.8235,
+            0.8382,
+            0.8382,
+            0.8529,
+            0.8529,
+            0.8578,
+            0.8578,
+            0.8627,
+            0.8627,
+            0.8676,
+            0.8676,
+            0.8775,
+            0.8775,
+            0.8824,
+            0.8824,
+            0.8922,
+            0.8922,
+            0.8971,
+            0.8971,
+            0.902,
+            0.902,
+            0.9069,
+            0.9069,
+            0.9118,
+            0.9118,
+            0.9167,
+            0.9167,
+            0.9265,
+            0.9265,
+            0.9314,
+            0.9314,
+            0.9461,
+            0.9461,
+            0.9559,
+            0.9559,
+            0.9657,
+            0.9657,
+            0.9706,
+            0.9706,
+            0.9804,
+            0.9804,
+            0.9853,
+            0.9853,
+            0.9902,
+            0.9902,
+            0.9951,
+            0.9951,
+            0.9951,
+            0.9951,
+            0.9951,
+            0.9951,
+            0.9951,
+            1.0,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            195,
+            35
+          ],
+          [
+            41,
+            163
+          ]
+        ],
+        "overfitting_status": "High Overfitting Risk",
+        "overfitting_badge": "danger",
+        "overfitting_desc": "Train 97.5% >> Test 82.5% (gap 15.1 points).",
+        "model_key": "Ensemble",
+        "model_name": "Random Forest (Ensemble)",
+        "best_params": {
+          "n_estimators": 50,
+          "max_depth": 10,
+          "class_weight": "balanced"
+        },
+        "cv_points": 4
+      },
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.8134,
+        "train_accuracy": 0.8848,
+        "balanced_accuracy": 0.8114,
+        "cv_balanced_accuracy_mean": 0.8001,
+        "cv_balanced_accuracy_std": 0.0208,
+        "precision_macro": 0.8136,
+        "recall_macro": 0.8114,
+        "f1_macro": 0.8121,
+        "auc": 0.8893,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0087,
+            0.0087,
+            0.013,
+            0.013,
+            0.0174,
+            0.0174,
+            0.0261,
+            0.0261,
+            0.0304,
+            0.0304,
+            0.0391,
+            0.0391,
+            0.0478,
+            0.0478,
+            0.0522,
+            0.0522,
+            0.0565,
+            0.0565,
+            0.0609,
+            0.0609,
+            0.0696,
+            0.0696,
+            0.0783,
+            0.0783,
+            0.0913,
+            0.0913,
+            0.1,
+            0.1,
+            0.1087,
+            0.1087,
+            0.113,
+            0.113,
+            0.1348,
+            0.1348,
+            0.1522,
+            0.1522,
+            0.1565,
+            0.1565,
+            0.1652,
+            0.1783,
+            0.1783,
+            0.1913,
+            0.1913,
+            0.2,
+            0.2,
+            0.2348,
+            0.2348,
+            0.2609,
+            0.2609,
+            0.2696,
+            0.2696,
+            0.2783,
+            0.2783,
+            0.2826,
+            0.2826,
+            0.3087,
+            0.3087,
+            0.313,
+            0.313,
+            0.3261,
+            0.3261,
+            0.3304,
+            0.3304,
+            0.3348,
+            0.3348,
+            0.3565,
+            0.3565,
+            0.3652,
+            0.3652,
+            0.3957,
+            0.3957,
+            0.4348,
+            0.4348,
+            0.4391,
+            0.4391,
+            0.4435,
+            0.4435,
+            0.4609,
+            0.4609,
+            0.4696,
+            0.4696,
+            0.5043,
+            0.5043,
+            0.5087,
+            0.5087,
+            0.5913,
+            0.5913,
+            0.6696,
+            0.6696,
+            0.6957,
+            0.6957,
+            0.7826,
+            0.7826,
+            0.8,
+            0.8,
+            0.8217,
+            0.8217,
+            0.8391,
+            0.8391,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.0049,
+            0.1029,
+            0.1029,
+            0.2549,
+            0.2549,
+            0.3775,
+            0.3775,
+            0.3922,
+            0.3922,
+            0.402,
+            0.402,
+            0.4804,
+            0.4804,
+            0.5882,
+            0.5882,
+            0.6569,
+            0.6569,
+            0.6618,
+            0.6618,
+            0.6667,
+            0.6667,
+            0.6765,
+            0.6765,
+            0.7059,
+            0.7059,
+            0.7206,
+            0.7206,
+            0.7304,
+            0.7304,
+            0.7353,
+            0.7353,
+            0.7451,
+            0.7451,
+            0.7598,
+            0.7598,
+            0.7647,
+            0.7647,
+            0.7745,
+            0.7745,
+            0.7794,
+            0.7794,
+            0.7794,
+            0.7892,
+            0.7892,
+            0.8039,
+            0.8039,
+            0.8137,
+            0.8137,
+            0.8186,
+            0.8186,
+            0.8284,
+            0.8284,
+            0.8529,
+            0.8529,
+            0.8578,
+            0.8578,
+            0.8627,
+            0.8627,
+            0.8676,
+            0.8676,
+            0.8725,
+            0.8725,
+            0.8922,
+            0.8922,
+            0.8971,
+            0.8971,
+            0.902,
+            0.902,
+            0.9069,
+            0.9069,
+            0.9118,
+            0.9118,
+            0.9167,
+            0.9167,
+            0.9314,
+            0.9314,
+            0.9363,
+            0.9363,
+            0.9412,
+            0.9412,
+            0.9461,
+            0.9461,
+            0.951,
+            0.951,
+            0.9559,
+            0.9559,
+            0.9657,
+            0.9657,
+            0.9706,
+            0.9706,
+            0.9755,
+            0.9755,
+            0.9804,
+            0.9804,
+            0.9853,
+            0.9853,
+            0.9902,
+            0.9902,
+            0.9951,
+            0.9951,
+            1.0,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            194,
+            36
+          ],
+          [
+            45,
+            159
+          ]
+        ],
+        "overfitting_status": "Moderate Overfitting",
+        "overfitting_badge": "warning",
+        "overfitting_desc": "Train 88.5% > Test 81.3% (gap 7.1 points).",
+        "model_key": "SVM",
+        "model_name": "Support Vector Machine (SVM)",
+        "best_params": {
+          "kernel": "rbf",
+          "C": 1.0,
+          "gamma": "scale"
+        },
+        "cv_points": 5
+      }
+    ],
+    "sensitivity": {
+      "KNN": [
+        {
+          "params": {
+            "n_neighbors": 1,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7297,
+          "cv_std": 0.0342
+        },
+        {
+          "params": {
+            "n_neighbors": 1,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7244,
+          "cv_std": 0.0283
+        },
+        {
+          "params": {
+            "n_neighbors": 3,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7503,
+          "cv_std": 0.0246
+        },
+        {
+          "params": {
+            "n_neighbors": 3,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7599,
+          "cv_std": 0.0252
+        },
+        {
+          "params": {
+            "n_neighbors": 5,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7519,
+          "cv_std": 0.0216
+        },
+        {
+          "params": {
+            "n_neighbors": 5,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7672,
+          "cv_std": 0.0192
+        },
+        {
+          "params": {
+            "n_neighbors": 7,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7534,
+          "cv_std": 0.0116
+        },
+        {
+          "params": {
+            "n_neighbors": 7,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7754,
+          "cv_std": 0.0189
+        },
+        {
+          "params": {
+            "n_neighbors": 11,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7551,
+          "cv_std": 0.0151
+        },
+        {
+          "params": {
+            "n_neighbors": 11,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7731,
+          "cv_std": 0.0165
+        },
+        {
+          "params": {
+            "n_neighbors": 15,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7514,
+          "cv_std": 0.0207
+        },
+        {
+          "params": {
+            "n_neighbors": 15,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.7725,
+          "cv_std": 0.0111
+        }
+      ],
+      "Ensemble": [
+        {
+          "params": {
+            "n_estimators": 25,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.795,
+          "cv_std": 0.0148
+        },
+        {
+          "params": {
+            "n_estimators": 50,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.8051,
+          "cv_std": 0.0163
+        },
+        {
+          "params": {
+            "n_estimators": 100,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.8051,
+          "cv_std": 0.0202
+        },
+        {
+          "params": {
+            "n_estimators": 200,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.802,
+          "cv_std": 0.0163
+        }
+      ],
+      "SVM": [
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 0.5,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.7959,
+          "cv_std": 0.0247
+        },
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 1.0,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.8001,
+          "cv_std": 0.0208
+        },
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 5.0,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.7986,
+          "cv_std": 0.0354
+        },
+        {
+          "params": {
+            "kernel": "linear",
+            "C": 1.0
+          },
+          "cv_balanced_accuracy": 0.7937,
+          "cv_std": 0.0233
+        },
+        {
+          "params": {
+            "kernel": "poly",
+            "C": 1.0
+          },
+          "cv_balanced_accuracy": 0.7486,
+          "cv_std": 0.0207
+        }
+      ]
+    },
+    "noise_outliers": {
+      "scenarios": {
+        "baseline": {
+          "label": "Baseline (standard)",
+          "description": "Standard deduplicated training set.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.7903,
+              "balanced_accuracy": 0.7864,
+              "f1_macro": 0.7876
+            },
+            "Ensemble": {
+              "accuracy": 0.8249,
+              "balanced_accuracy": 0.8234,
+              "f1_macro": 0.8239
+            },
+            "SVM": {
+              "accuracy": 0.8134,
+              "balanced_accuracy": 0.8114,
+              "f1_macro": 0.8121
+            }
+          }
+        },
+        "without_outliers": {
+          "label": "Without outliers (IQR)",
+          "description": "129 row(s) removed with the IQR rule.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.7834,
+              "balanced_accuracy": 0.7796,
+              "f1_macro": 0.7807
+            },
+            "Ensemble": {
+              "accuracy": 0.8249,
+              "balanced_accuracy": 0.8231,
+              "f1_macro": 0.8238
+            },
+            "SVM": {
+              "accuracy": 0.7972,
+              "balanced_accuracy": 0.7971,
+              "f1_macro": 0.7967
+            }
+          }
+        },
+        "with_noise": {
+          "label": "With feature noise",
+          "description": "18% Gaussian perturbation on every continuous feature.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.7581,
+              "balanced_accuracy": 0.7521,
+              "f1_macro": 0.7529
+            },
+            "Ensemble": {
+              "accuracy": 0.8203,
+              "balanced_accuracy": 0.8202,
+              "f1_macro": 0.8198
+            },
+            "SVM": {
+              "accuracy": 0.8065,
+              "balanced_accuracy": 0.8046,
+              "f1_macro": 0.8053
+            }
+          }
+        },
+        "noise_smoothed": {
+          "label": "Noise -> Gaussian smoothed",
+          "description": "Noise injected then suppressed with gaussian_filter1d (sigma=1.2).",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.7051,
+              "balanced_accuracy": 0.7101,
+              "f1_macro": 0.7046
+            },
+            "Ensemble": {
+              "accuracy": 0.6705,
+              "balanced_accuracy": 0.6659,
+              "f1_macro": 0.6659
+            },
+            "SVM": {
+              "accuracy": 0.5323,
+              "balanced_accuracy": 0.5581,
+              "f1_macro": 0.4439
+            }
+          }
+        },
+        "with_outliers": {
+          "label": "With injected outliers",
+          "description": "104 row(s) spiked at 3.5 sd on up to 3 features.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.788,
+              "balanced_accuracy": 0.7837,
+              "f1_macro": 0.7849
+            },
+            "Ensemble": {
+              "accuracy": 0.8272,
+              "balanced_accuracy": 0.825,
+              "f1_macro": 0.8259
+            },
+            "SVM": {
+              "accuracy": 0.8134,
+              "balanced_accuracy": 0.8114,
+              "f1_macro": 0.8121
+            }
+          }
+        }
+      },
+      "comparison": [
+        {
+          "model_key": "KNN",
+          "model_name": "K-Nearest Neighbors (KNN)",
+          "baseline_acc": 0.7903,
+          "without_outliers_acc": 0.7834,
+          "noisy_acc": 0.7581,
+          "smoothed_acc": 0.7051,
+          "outliers_acc": 0.788,
+          "noise_delta": -0.0322,
+          "smooth_recovery": -0.053,
+          "outlier_delta": -0.0023,
+          "iqr_cleanup_delta": -0.0069
+        },
+        {
+          "model_key": "Ensemble",
+          "model_name": "Random Forest (Ensemble)",
+          "baseline_acc": 0.8249,
+          "without_outliers_acc": 0.8249,
+          "noisy_acc": 0.8203,
+          "smoothed_acc": 0.6705,
+          "outliers_acc": 0.8272,
+          "noise_delta": -0.0046,
+          "smooth_recovery": -0.1498,
+          "outlier_delta": 0.0023,
+          "iqr_cleanup_delta": 0.0
+        },
+        {
+          "model_key": "SVM",
+          "model_name": "Support Vector Machine (SVM)",
+          "baseline_acc": 0.8134,
+          "without_outliers_acc": 0.7972,
+          "noisy_acc": 0.8065,
+          "smoothed_acc": 0.5323,
+          "outliers_acc": 0.8134,
+          "noise_delta": -0.0069,
+          "smooth_recovery": -0.2742,
+          "outlier_delta": 0.0,
+          "iqr_cleanup_delta": -0.0162
+        }
+      ],
+      "stats": {
+        "outliers_removed": 129,
+        "outliers_injected": 104,
+        "rows_used": 1302
+      }
+    },
+    "pickles": {
+      "split": "storage\\model_lab\\covid_20261115_225021_split.pkl",
+      "KNN": "storage\\model_lab\\covid_KNN_20261115_225021.pkl",
+      "Ensemble": "storage\\model_lab\\covid_Ensemble_20261115_225021.pkl",
+      "SVM": "storage\\model_lab\\covid_SVM_20261115_225021.pkl",
+      "scaler": "standard",
+      "metadata": "storage\\model_lab\\covid_20261115_225021_lab.json"
+    },
+    "insights": [
+      "Scaler benchmark chose StandardScaler; best model: Random Forest (Ensemble) (macro F1 0.824, balanced accuracy 0.823, ROC-AUC 0.8898).",
+      "Noise stress test: accuracy change -3.2 points with Gaussian noise (K-Nearest Neighbors); smoothing then changed it by -5.3 points. IQR cleaning: -0.7 points; injected outliers: -0.2 points.",
+      "Manual tuning winners: KNN {'n_neighbors': 7, 'metric': 'manhattan', 'weights': 'distance'} -> CV 0.775; Ensemble {'n_estimators': 50, 'max_depth': 10, 'class_weight': 'balanced'} -> CV 0.805; SVM {'kernel': 'rbf', 'C': 1.0, 'gamma': 'scale'} -> CV 0.800.",
+      "Gaussian smoothing is applied along the row order: on a table of unrelated patients it blurs distinct observations instead of removing sensor noise, which is why accuracy drops - keep it for time-indexed signals only.",
+      "Overfitting watch: K-Nearest Neighbors = High Overfitting Risk (Train 99.9% >> Test 79.0% (gap 20.9 points).); Random Forest = High Overfitting Risk (Train 97.5% >> Test 82.5% (gap 15.1 points).); Support Vector Machine = Moderate Overfitting (Train 88.5% > Test 81.3% (gap 7.1 points).)."
+    ],
+    "plots": [
+      "lab_benchmark",
+      "lab_overfit",
+      "lab_roc",
+      "lab_cm_knn",
+      "lab_cm_ensemble",
+      "lab_cm_svm",
+      "lab_param_sensitivity",
+      "lab_noise_outlier"
+    ]
+  },
   "interpretation": {
     "description": "Interpretation of the EDA results and the concrete actions to apply from the data description: what to fix, what to mask, what to keep for modelling, and which checks are already active in the Pipeline.",
     "summary": "Quality score: 86.8/100 (moderate). 14 contradictory rows (0.806%) across 4 triggered rule(s). Hidden missing values: 'Age' has 5 zero placeholder(s). 25 feature(s) show noise (83.33% of those tested); mean noise-to-signal 0.6062.",
@@ -10498,10 +11677,10 @@
       "mime": "image/png"
     },
     {
-      "name": "correlation_clustered",
-      "title": "Clustered correlation",
+      "name": "correlation_network",
+      "title": "Strong correlation network",
       "section": "correlation",
-      "file": "eda_output_covid19\\plots\\correlation_clustered.png",
+      "file": "eda_output_covid19\\plots\\correlation_network.png",
       "mime": "image/png"
     },
     {
@@ -10852,6 +12031,62 @@
       "title": "Mutual information",
       "section": "model_phase",
       "file": "eda_output_covid19\\plots\\model_importance_mutual_info.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_benchmark",
+      "title": "Model benchmark (KNN / Ensemble / SVM)",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_benchmark.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_overfit",
+      "title": "Overfitting diagnosis (train / CV / test)",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_overfit.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_roc",
+      "title": "ROC / AUC comparison",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_roc.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_knn",
+      "title": "Confusion matrix - K-Nearest Neighbors (KNN)",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_cm_knn.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_ensemble",
+      "title": "Confusion matrix - Random Forest (Ensemble)",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_cm_ensemble.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_svm",
+      "title": "Confusion matrix - Support Vector Machine (SVM)",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_cm_svm.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_param_sensitivity",
+      "title": "Parameter sensitivity curves (manual CV loops)",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_param_sensitivity.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_noise_outlier",
+      "title": "Noise & outlier influence on accuracy",
+      "section": "model_lab",
+      "file": "eda_output_covid19\\plots\\lab_noise_outlier.png",
       "mime": "image/png"
     },
     {

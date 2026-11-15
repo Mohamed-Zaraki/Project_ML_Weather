@@ -154,7 +154,7 @@ def corr_heatmap(long: pd.DataFrame):
         layers = heat + base.mark_text(fontSize=10).encode(
             text=alt.Text("value:Q", format=".2f"),
             color=alt.condition("abs(datum.value) > 0.5", alt.value("white"), alt.value(INK)))
-    return fit(layers, max(260, min(620, 34 * n + 60)))
+    return fit(layers, max(260, min(1100, 34 * n + 60)))
 
 
 def top_pairs(cp: pd.DataFrame):

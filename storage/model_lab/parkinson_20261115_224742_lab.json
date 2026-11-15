@@ -1,0 +1,29 @@
+{
+  "dataset": "parkinson",
+  "target": "Group (Normal/PD/SWEDD - 1/2/3)",
+  "scaler": "standard",
+  "best_model": "Ensemble",
+  "models": {
+    "KNN": {
+      "n_neighbors": 3,
+      "metric": "manhattan",
+      "weights": "distance"
+    },
+    "Ensemble": {
+      "n_estimators": 100,
+      "max_depth": 10,
+      "class_weight": "balanced"
+    },
+    "SVM": {
+      "kernel": "linear",
+      "C": 1.0
+    }
+  },
+  "pickles": {
+    "split": "storage\\model_lab\\parkinson_20261115_224742_split.pkl",
+    "KNN": "storage\\model_lab\\parkinson_KNN_20261115_224742.pkl",
+    "Ensemble": "storage\\model_lab\\parkinson_Ensemble_20261115_224742.pkl",
+    "SVM": "storage\\model_lab\\parkinson_SVM_20261115_224742.pkl",
+    "scaler": "standard"
+  }
+}

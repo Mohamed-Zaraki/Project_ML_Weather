@@ -1,0 +1,30 @@
+{
+  "dataset": "heart",
+  "target": "target",
+  "scaler": "standard",
+  "best_model": "KNN",
+  "models": {
+    "KNN": {
+      "n_neighbors": 15,
+      "metric": "manhattan",
+      "weights": "distance"
+    },
+    "Ensemble": {
+      "n_estimators": 200,
+      "max_depth": 10,
+      "class_weight": "balanced"
+    },
+    "SVM": {
+      "kernel": "rbf",
+      "C": 5.0,
+      "gamma": "scale"
+    }
+  },
+  "pickles": {
+    "split": "storage\\model_lab\\heart_20261115_224817_split.pkl",
+    "KNN": "storage\\model_lab\\heart_KNN_20261115_224817.pkl",
+    "Ensemble": "storage\\model_lab\\heart_Ensemble_20261115_224817.pkl",
+    "SVM": "storage\\model_lab\\heart_SVM_20261115_224817.pkl",
+    "scaler": "standard"
+  }
+}

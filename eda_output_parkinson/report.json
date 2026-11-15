@@ -1,11 +1,11 @@
 {
   "meta": {
-    "report_id": "parkinson_20261113_121938",
+    "report_id": "parkinson_20261115_225023",
     "dataset_name": "parkinson",
     "dataset_label": "Parkinson's Disease",
     "dataset_description": "",
     "csv_path": "datasets_extracted\\parkinson\\parkinson\\data1.csv",
-    "generated_at": "2026-11-13T12:19:38",
+    "generated_at": "2026-11-15T22:50:23",
     "n_rows": 584,
     "n_cols": 15,
     "numeric_columns": [
@@ -2678,7 +2678,7 @@
     ]
   },
   "correlation": {
-    "description": "Pearson (linear) and Spearman (rank) correlation matrices, clustered correlation blocks, top pairs, target correlation, VIF and class-conditional distributions.",
+    "description": "Pearson (linear) and Spearman (rank) correlation matrices, a strong-correlation network that groups redundant features, top pairs, target correlation, VIF and class-conditional distributions.",
     "pearson": {
       "A-beta": {
         "A-beta": 1.0,
@@ -3365,12 +3365,13 @@
       "'A-beta' vs 'T-tau': Pearson 0.16 but Spearman 0.35 - monotonic but non-linear (or outlier-driven).",
       "'T-tau/A-beta' vs 'P-tau/t-tau': Pearson -0.15 but Spearman -0.42 - monotonic but non-linear (or outlier-driven).",
       "High VIF (>= 10, multicollinearity): [('p-tau', 15.328), ('P-tau/A-beta', 13.273), ('T-tau/A-beta', 10.27)].",
+      "Strong correlation network: 13 link(s), |r| >= 0.50, among 11 feature(s); most connected feature: 'PUTAMEN_L' (4 link(s)). Green = positive, red = negative.",
       "Strongest target correlates: [('PUTAMEN_L', -0.8144), ('PUTAMEN_R', -0.8097), ('CAUDATE_L', -0.6013), ('UPSIT', -0.6011), ('CAUDATE_R', -0.5922)]."
     ],
     "plots": [
       "correlation_pearson",
       "correlation_spearman",
-      "correlation_clustered",
+      "correlation_network",
       "correlation_top_pairs",
       "correlation_scatter_putamen_r__putamen_l",
       "correlation_scatter_caudate_r__caudate_l",
@@ -3856,6 +3857,658 @@
       "model_importance_mutual_info"
     ]
   },
+  "model_lab": {
+    "description": "Modelling lab: three algorithms (KNN, Random Forest, SVM) compared with the same preprocessing (median imputation, one-hot encoding, auto-benchmarked scaler), tuned by explicit cross-validation loops (k, n_estimators, kernel/C), then evaluated on a stratified hold-out (accuracy, balanced accuracy, macro F1, ROC-AUC, overfitting gap) and stress-tested against noise and outliers (baseline / IQR-cleaned / feature noise / noise smoothed / injected outliers).",
+    "scaler": "standard",
+    "scaler_table": [
+      {
+        "scaler": "standard",
+        "cv_balanced_accuracy": 0.9346
+      },
+      {
+        "scaler": "minmax",
+        "cv_balanced_accuracy": 0.9344
+      },
+      {
+        "scaler": "robust",
+        "cv_balanced_accuracy": 0.9149
+      }
+    ],
+    "cv_folds": 5,
+    "split": {
+      "test_size": 0.25,
+      "n_train": 438,
+      "n_test": 146,
+      "n_features": 13
+    },
+    "best_model": "Ensemble",
+    "models": [
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.9315,
+        "train_accuracy": 1.0,
+        "balanced_accuracy": 0.9441,
+        "cv_balanced_accuracy_mean": 0.9535,
+        "cv_balanced_accuracy_std": 0.0198,
+        "precision_macro": 0.9112,
+        "recall_macro": 0.9441,
+        "f1_macro": 0.924,
+        "auc": 0.9673,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0217,
+            0.0217,
+            0.0652,
+            0.0652,
+            0.1304,
+            0.1304,
+            0.1957,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.79,
+            0.91,
+            0.91,
+            0.92,
+            0.92,
+            0.94,
+            0.94,
+            0.95,
+            0.95,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            45,
+            1
+          ],
+          [
+            9,
+            91
+          ]
+        ],
+        "overfitting_status": "Well-Balanced",
+        "overfitting_badge": "success",
+        "overfitting_desc": "Train 100.0% ~ CV 95.3% ~ Test 93.2%.",
+        "model_key": "KNN",
+        "model_name": "K-Nearest Neighbors (KNN)",
+        "best_params": {
+          "n_neighbors": 3,
+          "metric": "manhattan",
+          "weights": "distance"
+        },
+        "cv_points": 12
+      },
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.9521,
+        "train_accuracy": 1.0,
+        "balanced_accuracy": 0.9533,
+        "cv_balanced_accuracy_mean": 0.9571,
+        "cv_balanced_accuracy_std": 0.0192,
+        "precision_macro": 0.9387,
+        "recall_macro": 0.9533,
+        "f1_macro": 0.9454,
+        "auc": 0.9927,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0217,
+            0.087,
+            0.1087,
+            0.1087,
+            0.1304,
+            0.1304,
+            0.1522,
+            0.1739,
+            0.2174,
+            0.2174,
+            0.3261,
+            0.3913,
+            0.4565,
+            0.5,
+            0.5652,
+            0.6304,
+            0.6522,
+            0.8261,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.29,
+            0.41,
+            0.45,
+            0.5,
+            0.54,
+            0.59,
+            0.68,
+            0.72,
+            0.75,
+            0.77,
+            0.78,
+            0.8,
+            0.82,
+            0.86,
+            0.89,
+            0.94,
+            0.95,
+            0.95,
+            0.96,
+            0.97,
+            0.97,
+            0.98,
+            0.98,
+            0.99,
+            0.99,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            44,
+            2
+          ],
+          [
+            5,
+            95
+          ]
+        ],
+        "overfitting_status": "Well-Balanced",
+        "overfitting_badge": "success",
+        "overfitting_desc": "Train 100.0% ~ CV 95.7% ~ Test 95.2%.",
+        "model_key": "Ensemble",
+        "model_name": "Random Forest (Ensemble)",
+        "best_params": {
+          "n_estimators": 100,
+          "max_depth": 10,
+          "class_weight": "balanced"
+        },
+        "cv_points": 4
+      },
+      {
+        "classes": [
+          "0",
+          "1"
+        ],
+        "test_accuracy": 0.9452,
+        "train_accuracy": 0.9703,
+        "balanced_accuracy": 0.9541,
+        "cv_balanced_accuracy_mean": 0.9592,
+        "cv_balanced_accuracy_std": 0.0311,
+        "precision_macro": 0.9274,
+        "recall_macro": 0.9541,
+        "f1_macro": 0.9386,
+        "auc": 0.9887,
+        "roc": {
+          "mode": "binary",
+          "fpr": [
+            0.0,
+            0.0,
+            0.0,
+            0.0217,
+            0.0217,
+            0.0435,
+            0.0435,
+            0.1087,
+            0.1087,
+            0.1957,
+            0.1957,
+            0.2609,
+            0.2609,
+            1.0
+          ],
+          "tpr": [
+            0.0,
+            0.01,
+            0.92,
+            0.92,
+            0.93,
+            0.93,
+            0.95,
+            0.95,
+            0.96,
+            0.96,
+            0.98,
+            0.98,
+            1.0,
+            1.0
+          ]
+        },
+        "confusion_matrix": [
+          [
+            45,
+            1
+          ],
+          [
+            7,
+            93
+          ]
+        ],
+        "overfitting_status": "Well-Balanced",
+        "overfitting_badge": "success",
+        "overfitting_desc": "Train 97.0% ~ CV 95.9% ~ Test 94.5%.",
+        "model_key": "SVM",
+        "model_name": "Support Vector Machine (SVM)",
+        "best_params": {
+          "kernel": "linear",
+          "C": 1.0
+        },
+        "cv_points": 5
+      }
+    ],
+    "sensitivity": {
+      "KNN": [
+        {
+          "params": {
+            "n_neighbors": 1,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9167,
+          "cv_std": 0.0279
+        },
+        {
+          "params": {
+            "n_neighbors": 1,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9131,
+          "cv_std": 0.024
+        },
+        {
+          "params": {
+            "n_neighbors": 3,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9258,
+          "cv_std": 0.0326
+        },
+        {
+          "params": {
+            "n_neighbors": 3,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9535,
+          "cv_std": 0.0198
+        },
+        {
+          "params": {
+            "n_neighbors": 5,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9346,
+          "cv_std": 0.0382
+        },
+        {
+          "params": {
+            "n_neighbors": 5,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9413,
+          "cv_std": 0.0266
+        },
+        {
+          "params": {
+            "n_neighbors": 7,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9302,
+          "cv_std": 0.0406
+        },
+        {
+          "params": {
+            "n_neighbors": 7,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9323,
+          "cv_std": 0.0236
+        },
+        {
+          "params": {
+            "n_neighbors": 11,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9214,
+          "cv_std": 0.0382
+        },
+        {
+          "params": {
+            "n_neighbors": 11,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.937,
+          "cv_std": 0.024
+        },
+        {
+          "params": {
+            "n_neighbors": 15,
+            "metric": "euclidean",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9211,
+          "cv_std": 0.0348
+        },
+        {
+          "params": {
+            "n_neighbors": 15,
+            "metric": "manhattan",
+            "weights": "distance"
+          },
+          "cv_balanced_accuracy": 0.9444,
+          "cv_std": 0.0196
+        }
+      ],
+      "Ensemble": [
+        {
+          "params": {
+            "n_estimators": 25,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9462,
+          "cv_std": 0.0153
+        },
+        {
+          "params": {
+            "n_estimators": 50,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9483,
+          "cv_std": 0.0226
+        },
+        {
+          "params": {
+            "n_estimators": 100,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9571,
+          "cv_std": 0.0192
+        },
+        {
+          "params": {
+            "n_estimators": 200,
+            "max_depth": 10,
+            "class_weight": "balanced"
+          },
+          "cv_balanced_accuracy": 0.9554,
+          "cv_std": 0.0262
+        }
+      ],
+      "SVM": [
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 0.5,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.9313,
+          "cv_std": 0.0363
+        },
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 1.0,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.9388,
+          "cv_std": 0.0356
+        },
+        {
+          "params": {
+            "kernel": "rbf",
+            "C": 5.0,
+            "gamma": "scale"
+          },
+          "cv_balanced_accuracy": 0.9374,
+          "cv_std": 0.0471
+        },
+        {
+          "params": {
+            "kernel": "linear",
+            "C": 1.0
+          },
+          "cv_balanced_accuracy": 0.9592,
+          "cv_std": 0.0311
+        },
+        {
+          "params": {
+            "kernel": "poly",
+            "C": 1.0
+          },
+          "cv_balanced_accuracy": 0.8564,
+          "cv_std": 0.0371
+        }
+      ]
+    },
+    "noise_outliers": {
+      "scenarios": {
+        "baseline": {
+          "label": "Baseline (standard)",
+          "description": "Standard deduplicated training set.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9315,
+              "balanced_accuracy": 0.9441,
+              "f1_macro": 0.924
+            },
+            "Ensemble": {
+              "accuracy": 0.9521,
+              "balanced_accuracy": 0.9533,
+              "f1_macro": 0.9454
+            },
+            "SVM": {
+              "accuracy": 0.9452,
+              "balanced_accuracy": 0.9541,
+              "f1_macro": 0.9386
+            }
+          }
+        },
+        "without_outliers": {
+          "label": "Without outliers (IQR)",
+          "description": "101 row(s) removed with the IQR rule.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9315,
+              "balanced_accuracy": 0.9265,
+              "f1_macro": 0.9216
+            },
+            "Ensemble": {
+              "accuracy": 0.9315,
+              "balanced_accuracy": 0.9265,
+              "f1_macro": 0.9216
+            },
+            "SVM": {
+              "accuracy": 0.9315,
+              "balanced_accuracy": 0.9324,
+              "f1_macro": 0.9224
+            }
+          }
+        },
+        "with_noise": {
+          "label": "With feature noise",
+          "description": "18% Gaussian perturbation on every continuous feature.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9247,
+              "balanced_accuracy": 0.9333,
+              "f1_macro": 0.9159
+            },
+            "Ensemble": {
+              "accuracy": 0.9452,
+              "balanced_accuracy": 0.9541,
+              "f1_macro": 0.9386
+            },
+            "SVM": {
+              "accuracy": 0.9521,
+              "balanced_accuracy": 0.9591,
+              "f1_macro": 0.946
+            }
+          }
+        },
+        "noise_smoothed": {
+          "label": "Noise -> Gaussian smoothed",
+          "description": "Noise injected then suppressed with gaussian_filter1d (sigma=1.2).",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.8904,
+              "balanced_accuracy": 0.873,
+              "f1_macro": 0.873
+            },
+            "Ensemble": {
+              "accuracy": 0.9247,
+              "balanced_accuracy": 0.898,
+              "f1_macro": 0.91
+            },
+            "SVM": {
+              "accuracy": 0.9589,
+              "balanced_accuracy": 0.9641,
+              "f1_macro": 0.9534
+            }
+          }
+        },
+        "with_outliers": {
+          "label": "With injected outliers",
+          "description": "35 row(s) spiked at 3.5 sd on up to 3 features.",
+          "scores": {
+            "KNN": {
+              "accuracy": 0.9452,
+              "balanced_accuracy": 0.9541,
+              "f1_macro": 0.9386
+            },
+            "Ensemble": {
+              "accuracy": 0.9384,
+              "balanced_accuracy": 0.9374,
+              "f1_macro": 0.9298
+            },
+            "SVM": {
+              "accuracy": 0.9521,
+              "balanced_accuracy": 0.9415,
+              "f1_macro": 0.9441
+            }
+          }
+        }
+      },
+      "comparison": [
+        {
+          "model_key": "KNN",
+          "model_name": "K-Nearest Neighbors (KNN)",
+          "baseline_acc": 0.9315,
+          "without_outliers_acc": 0.9315,
+          "noisy_acc": 0.9247,
+          "smoothed_acc": 0.8904,
+          "outliers_acc": 0.9452,
+          "noise_delta": -0.0068,
+          "smooth_recovery": -0.0343,
+          "outlier_delta": 0.0137,
+          "iqr_cleanup_delta": 0.0
+        },
+        {
+          "model_key": "Ensemble",
+          "model_name": "Random Forest (Ensemble)",
+          "baseline_acc": 0.9521,
+          "without_outliers_acc": 0.9315,
+          "noisy_acc": 0.9452,
+          "smoothed_acc": 0.9247,
+          "outliers_acc": 0.9384,
+          "noise_delta": -0.0069,
+          "smooth_recovery": -0.0205,
+          "outlier_delta": -0.0137,
+          "iqr_cleanup_delta": -0.0206
+        },
+        {
+          "model_key": "SVM",
+          "model_name": "Support Vector Machine (SVM)",
+          "baseline_acc": 0.9452,
+          "without_outliers_acc": 0.9315,
+          "noisy_acc": 0.9521,
+          "smoothed_acc": 0.9589,
+          "outliers_acc": 0.9521,
+          "noise_delta": 0.0069,
+          "smooth_recovery": 0.0068,
+          "outlier_delta": 0.0069,
+          "iqr_cleanup_delta": -0.0137
+        }
+      ],
+      "stats": {
+        "outliers_removed": 101,
+        "outliers_injected": 35,
+        "rows_used": 438
+      }
+    },
+    "pickles": {
+      "split": "storage\\model_lab\\parkinson_20261115_225046_split.pkl",
+      "KNN": "storage\\model_lab\\parkinson_KNN_20261115_225046.pkl",
+      "Ensemble": "storage\\model_lab\\parkinson_Ensemble_20261115_225046.pkl",
+      "SVM": "storage\\model_lab\\parkinson_SVM_20261115_225046.pkl",
+      "scaler": "standard",
+      "metadata": "storage\\model_lab\\parkinson_20261115_225046_lab.json"
+    },
+    "insights": [
+      "Scaler benchmark chose StandardScaler; best model: Random Forest (Ensemble) (macro F1 0.945, balanced accuracy 0.953, ROC-AUC 0.9927).",
+      "Noise stress test: accuracy change -0.7 points with Gaussian noise (Random Forest); smoothing then changed it by -2.1 points. IQR cleaning: -2.1 points; injected outliers: -1.4 points.",
+      "Manual tuning winners: KNN {'n_neighbors': 3, 'metric': 'manhattan', 'weights': 'distance'} -> CV 0.954; Ensemble {'n_estimators': 100, 'max_depth': 10, 'class_weight': 'balanced'} -> CV 0.957; SVM {'kernel': 'linear', 'C': 1.0} -> CV 0.959.",
+      "All three models show a train/test gap below 7 points (no overfitting flag)."
+    ],
+    "plots": [
+      "lab_benchmark",
+      "lab_overfit",
+      "lab_roc",
+      "lab_cm_knn",
+      "lab_cm_ensemble",
+      "lab_cm_svm",
+      "lab_param_sensitivity",
+      "lab_noise_outlier"
+    ]
+  },
   "interpretation": {
     "description": "Interpretation of the EDA results and the concrete actions to apply from the data description: what to fix, what to mask, what to keep for modelling, and which checks are already active in the Pipeline.",
     "summary": "Quality score: 92.2/100 (good). 8 contradictory rows (1.37%) across 2 triggered rule(s). 9 feature(s) show noise (69.23% of those tested); mean noise-to-signal 0.4275. 25 samples (4.28%) are consensus outliers across 6 unsupervised detectors.",
@@ -4074,10 +4727,10 @@
       "mime": "image/png"
     },
     {
-      "name": "correlation_clustered",
-      "title": "Clustered correlation",
+      "name": "correlation_network",
+      "title": "Strong correlation network",
       "section": "correlation",
-      "file": "eda_output_parkinson\\plots\\correlation_clustered.png",
+      "file": "eda_output_parkinson\\plots\\correlation_network.png",
       "mime": "image/png"
     },
     {
@@ -4274,6 +4927,62 @@
       "title": "Mutual information",
       "section": "model_phase",
       "file": "eda_output_parkinson\\plots\\model_importance_mutual_info.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_benchmark",
+      "title": "Model benchmark (KNN / Ensemble / SVM)",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_benchmark.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_overfit",
+      "title": "Overfitting diagnosis (train / CV / test)",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_overfit.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_roc",
+      "title": "ROC / AUC comparison",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_roc.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_knn",
+      "title": "Confusion matrix - K-Nearest Neighbors (KNN)",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_cm_knn.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_ensemble",
+      "title": "Confusion matrix - Random Forest (Ensemble)",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_cm_ensemble.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_cm_svm",
+      "title": "Confusion matrix - Support Vector Machine (SVM)",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_cm_svm.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_param_sensitivity",
+      "title": "Parameter sensitivity curves (manual CV loops)",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_param_sensitivity.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "lab_noise_outlier",
+      "title": "Noise & outlier influence on accuracy",
+      "section": "model_lab",
+      "file": "eda_output_parkinson\\plots\\lab_noise_outlier.png",
       "mime": "image/png"
     },
     {
