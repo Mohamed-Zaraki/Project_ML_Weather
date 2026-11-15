@@ -8,9 +8,9 @@ from __future__ import annotations
 import altair as alt
 import pandas as pd
 
-TEAL, TEAL_2 = "#0E6B6F", "#14A3A8"
-GOOD, WARN, BAD, INFO, MUTED = "#2B7A4B", "#B04A08", "#C0392B", "#3B6FB6", "#7A8A90"
-INK = "#10222A"
+TEAL, TEAL_2 = "#4F46E5", "#06B6D4"
+GOOD, WARN, BAD, INFO, MUTED = "#10B981", "#F59E0B", "#EF4444", "#3B82F6", "#64748B"
+INK = "#0F172A"
 LAYER_COLORS = [TEAL, TEAL_2, INFO, WARN, MUTED]
 
 

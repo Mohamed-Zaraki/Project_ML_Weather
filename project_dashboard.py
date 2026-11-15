@@ -1,7 +1,7 @@
-"""project_dashboard.py : tableau de bord de synthèse du projet ML Weather.
+"""project_dashboard.py : tableau de bord de synthèse du projet ML Weather & Santé.
 
 Montre ce qui a été réalisé : catalogue de données, EDA, qualité Phase I, modèles,
-prétraitement, architecture du code. Tout est lu depuis les fichiers du projet.
+prétraitement, architecture du code et explications visuelles des problématiques métier.
 
 Lancer (depuis la racine du projet) :
     streamlit run project_dashboard.py
@@ -12,7 +12,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="Tableau de bord · ML Weather", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Data Description & Quality · ML Dashboard", page_icon="📊", layout="wide")
 
 import dashboard_data as dd  # noqa: E402
 from dataset_cards import render_dataset_cards  # noqa: E402
@@ -23,19 +23,105 @@ from theme import apply_theme, attention_list, brand, hero, kpi_row, section_tit
 apply_theme()
 st.markdown(
     """<style>
-.tl { position: relative; margin: .4rem 0 1.2rem 0; padding-left: 1.6rem; border-left: 2px solid var(--line); }
-.tl-i { position: relative; margin-bottom: 1rem; }
-.tl-i::before { content: ""; position: absolute; left: -2.02rem; top: .35rem; width: .9rem; height: .9rem;
-  border-radius: 50%; background: var(--accent-2); border: 3px solid var(--soft-2); }
-.tl-d { font-family: 'Geist Mono', ui-monospace, monospace; font-size: .7rem; letter-spacing: .08em; opacity: .6; }
-.tl-t { font-weight: 600; }
-.tl-x { font-size: .85rem; opacity: .75; }
+.tl { position: relative; margin: .5rem 0 1.3rem 0; padding-left: 1.8rem; border-left: 2px solid var(--line); }
+.tl-i { position: relative; margin-bottom: 1.1rem; }
+.tl-i::before { content: ""; position: absolute; left: -2.25rem; top: .35rem; width: 1rem; height: 1rem;
+  border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: 3px solid var(--soft-2); box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+.tl-d { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .72rem; letter-spacing: .08em; opacity: .7; font-weight: 600; color: var(--accent-2); }
+.tl-t { font-weight: 700; font-size: .95rem; margin-top: .1rem; }
+.tl-x { font-size: .84rem; opacity: .8; line-height: 1.35; }
+
+.problem-card {
+  border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 18px; padding: 1.2rem 1.3rem;
+  background: #FFFFFF; height: 100%;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  position: relative; overflow: hidden;
+}
+.problem-card:hover {
+  transform: translateY(-4px); border-color: var(--accent-2);
+  box-shadow: 0 14px 30px -8px rgba(79, 70, 229, 0.14);
+}
+.problem-card-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+.problem-card-t { font-weight: 800; font-size: 1.05rem; color: #0F172A; }
+.problem-card-b { font-size: .84rem; color: #334155; line-height: 1.45; }
 </style>""",
     unsafe_allow_html=True,
 )
 
-TEAL, TEAL_2 = "#0E6B6F", "#14A3A8"
-GOOD, WARN, BAD, INFO, MUTED = "#2B7A4B", "#B04A08", "#C0392B", "#3B6FB6", "#7A8A90"
+# ───────────────────────── Couleurs vibrantes modernes ─────────────────────────
+TEAL, TEAL_2 = "#4F46E5", "#06B6D4"
+GOOD, WARN, BAD, INFO, MUTED = "#10B981", "#F59E0B", "#EF4444", "#3B82F6", "#64748B"
+
+
+# ───────────────────────── Dictionnaire des problématiques métier ─────────────────────────
+PROBLEMS_DATA = {
+    "weather": {
+        "title": "Prévision Météorologique & Pannes de Capteurs Barométriques",
+        "tag": "Météorologie · 96 453 lignes",
+        "icon": "🌤️",
+        "accent": "#0284C7",
+        "problem": (
+            "Prédire les conditions météorologiques à partir de 96 453 relevés horaires sur 10 ans. "
+            "Le défi critique est la défaillance matérielle des baromètres : 1 288 enregistrements présentent une "
+            "pression atmosphérique aberrante de 0 millibar (capteur bloqué), en plus de 3 192 doublons stricts."
+        ),
+        "impact": "Un modèle entraîné sur ces zéros apprendrait de fausses lois physiques et fausserait toutes les prévisions de tempêtes.",
+        "solution": "Exclusion systématique des pressions nulles, imputation robuste, analyse des tendances mensuelles et Random Forest pondéré.",
+    },
+    "covid": {
+        "title": "Diagnostic Rapide Covid-19 en Laboratoire d'Urgence",
+        "tag": "Covid-19 · 1 736 patients",
+        "icon": "🧪",
+        "accent": "#0891B2",
+        "problem": (
+            "Prédire l'infection Covid-19 dès l'admission à partir de 34 biomarqueurs sanguins et biochimiques. "
+            "La difficulté majeure réside dans un taux massif de valeurs manquantes (les panels complets ne sont pas prescrits à tous les patients) "
+            "et des corrélations non-linéaires complexes entre marqueurs immunitaires."
+        ),
+        "impact": "Un faux négatif peut provoquer un foyer épidémique intrahospitalier ; l'accuracy classique est trompeuse à cause du déséquilibre.",
+        "solution": "Pipeline avec SimpleImputer médian/mode, réduction de dimension, validation croisée stratifiée et optimisation du F1 Macro.",
+    },
+    "parkinson": {
+        "title": "Dépistage Précoce de la Maladie de Parkinson",
+        "tag": "Neurologie · 584 patients",
+        "icon": "🧠",
+        "accent": "#7C3AED",
+        "problem": (
+            "Détecter la maladie neurodégénérative à partir de 15 biomarqueurs moteurs (tremblements, démarche) et cognitifs. "
+            "Le piège central est le déséquilibre marqué des classes (70% malades / 30% sains) et le bruit cinématique (tremblement physiologique vs pathologique)."
+        ),
+        "impact": "Un classifieur naïf prédisant toujours la classe majoritaire obtiendrait 70% d'accuracy tout en ratant 100% des cas sains.",
+        "solution": "Consensus de 6 détecteurs d'anomalies multivariés, calcul du SNR, et évaluation impérative par Balanced Accuracy.",
+    },
+    "alcohol": {
+        "title": "Détection d'Alcoolémie sans Contact par Thermographie & Vision",
+        "tag": "Biométrie · 390 observations",
+        "icon": "🍺",
+        "accent": "#D97706",
+        "problem": (
+            "Détecter l'état d'ébriété sans éthylotest invasif via la thermographie faciale infrarouge (températures faciales min/max) et l'oculométrie. "
+            "Le problème identifié est la présence de contradictions directes d'étiquetage (sujets classés sains avec taux d'alcoolémie mesuré > 0) "
+            "et la sensibilité thermique à l'environnement ambiant."
+        ),
+        "impact": "Les contradictions logiques perturbent les frontières de décision du modèle et génèrent des faux positifs inacceptables.",
+        "solution": "Audit automatisé des contradictions, analyse des paires fortement corrélées (températures faciale/ambiante) et Random Forest.",
+    },
+    "heart": {
+        "title": "Évaluation du Risque de Crise Cardiaque (Infarctus)",
+        "tag": "Cardiologie · 1 190 dossiers cliniques",
+        "icon": "❤️",
+        "accent": "#E11D48",
+        "problem": (
+            "Pronostiquer le risque vital d'accident cardiovasculaire à partir de paramètres cliniques (angine, ECG, fréquence cardiaque, cholestérol). "
+            "Le piège de ce dataset est la présence de fausses valeurs nulles masquées : des patients avec cholestérol = 0 ou pression artérielle = 0, "
+            "ce qui est physiologiquement impossible chez un individu vivant."
+        ),
+        "impact": "Ces zéros cachés faussent les calculs statistiques et dégradent la calibration des probabilités de risque vital.",
+        "solution": "Détection automatique des zéros aberrants masqués comme valeurs manquantes, imputation ciblée et évaluation ROC-AUC.",
+    },
+}
 
 
 # ───────────────────────── utilitaires ─────────────────────────
@@ -61,10 +147,18 @@ def get_db():
     return dd.db_stats()
 
 
-
-SEC_FR = {"missing_duplicates": "Manquants et doublons", "contradictions": "Contradictions", "data_quality": "Indicateurs de qualité",
-          "outliers": "Outliers", "noise": "Bruit", "correlation": "Corrélations", "kde": "Distributions",
-          "monthly_trends": "Tendances mensuelles", "model_phase": "Modèle", "interpretation": "Interprétation"}
+SEC_FR = {
+    "missing_duplicates": "Manquants et doublons",
+    "contradictions": "Contradictions",
+    "data_quality": "Indicateurs de qualité",
+    "outliers": "Outliers",
+    "noise": "Bruit",
+    "correlation": "Corrélations",
+    "kde": "Distributions",
+    "monthly_trends": "Tendances mensuelles",
+    "model_phase": "Modèle",
+    "interpretation": "Interprétation",
+}
 
 
 def plots_carousel(sections: list[str], title: str | None = None) -> None:
@@ -86,8 +180,10 @@ def plots_carousel(sections: list[str], title: str | None = None) -> None:
             with c1:
                 stretch(st.button, "◀ Précédent", key=f"{k}_prev", on_click=go, args=(-1,))
             with c2:
-                st.markdown(f"<div style='text-align:center;padding-top:.4rem'><b>{idx + 1} / {n}</b> · {items[idx]['title']}</div>",
-                            unsafe_allow_html=True)
+                st.markdown(
+                    f"<div style='text-align:center;padding-top:.4rem'><b>{idx + 1} / {n}</b> · {items[idx]['title']}</div>",
+                    unsafe_allow_html=True,
+                )
             with c3:
                 stretch(st.button, "Suivant ▶", key=f"{k}_next", on_click=go, args=(1,))
         st.image(str(items[idx]["path"]), caption=items[idx]["title"])
@@ -102,72 +198,147 @@ ov = dd.overview_table(reports)
 mt = dd.model_table(reports)
 
 # ───────────────────────── sélection (accueil ↔ page dataset) ─────────────────────────
-brand("Tableau de bord du projet")
+brand("Audit & Qualité des Données", title="Data Description", logo="DD")
 sel = st.session_state.get("home_dataset")
 if sel not in reports:
     sel = None
 if sel is not None:
+    st.sidebar.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
     if st.sidebar.button("← Retour aux datasets", use_container_width=True, key="back_home"):
         st.session_state["home_dataset"] = None
         st.rerun()
-    st.sidebar.markdown("**Changer de dataset**")
-    for k in reports:
-        if k != sel and st.sidebar.button(dd.label(k), key=f"side_{k}", use_container_width=True):
-            st.session_state["home_dataset"] = k
-            st.rerun()
+    st.sidebar.markdown(f"""
+    <div style="background: rgba(79, 70, 229, 0.05); border: 1px solid rgba(79, 70, 229, 0.22); border-radius: 16px; padding: 1rem 1.1rem; margin-top: 1.2rem;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700; color: #4F46E5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem;">Jeu de Données Actif</div>
+      <div style="font-weight: 800; font-size: 1.05rem; color: #0F172A; margin-bottom: 0.45rem;">{dd.label(sel)}</div>
+      <div style="font-size: 0.8rem; color: #64748B; line-height: 1.4;">Pour explorer un autre dataset, cliquez sur le bouton ci-dessus pour revenir à la sélection d'accueil.</div>
+    </div>
+    """, unsafe_allow_html=True)
 st.sidebar.divider()
-st.sidebar.caption("Sources lues : rapports JSON, data.db et scripts .py du dossier du projet.")
+st.sidebar.caption("Sources lues : rapports JSON, data.db et scripts .py du projet.")
 rep = reports[sel] if sel else None
 
-# ───────────────────────── bandeau ─────────────────────────
+# ───────────────────────── bandeau principal ─────────────────────────
 total_rows = int(ov["Lignes"].sum())
 if sel is None:
     hero(
-        "Projet ML · Analyse météo et données de santé",
-        "Ce qui a été réalisé",
+        "Projet Machine Learning & Qualité des Données",
+        "Analyse Météo & Datasets Médicaux Multi-Domaines",
         [
-            ("Datasets analysés", str(len(reports))),
-            ("Lignes", f"{total_rows:,}".replace(",", " ")),
-            ("Graphiques", str(int(ov["Graphiques"].sum()))),
-            ("Insights", str(int(ov["Insights"].sum()))),
+            ("Datasets audités", str(len(reports))),
+            ("Observations totales", f"{total_rows:,}".replace(",", " ")),
+            ("Visualisations générées", str(int(ov["Graphiques"].sum()))),
+            ("Insights analytiques", str(int(ov["Insights"].sum()))),
         ],
     )
-    section_title("Choisir un dataset", "cliquez sur « Ouvrir » pour détailler : données, qualité, outliers & bruit, modèle")
+
+    # ── Section Problématique : Vue synthétique de l'architecture du projet ──
+    st.markdown(
+        """
+        <div class="problem-box">
+          <div class="problem-title">
+            <span>🎯</span> Problématique Centrale du Projet : De la Donnée Bruitée aux Prédictions Fiables
+          </div>
+          <div class="problem-desc">
+            Dans le monde réel, les données météorologiques et les dossiers médicaux ne sont jamais propres : capteurs barométriques
+            bloqués à 0, contradictions d'étiquetage, valeurs biologiques impossibles (cholestérol = 0), et fort déséquilibre de classes.
+            Ce projet implémente un <b>pipeline complet en 4 étapes</b> pour auditer, nettoyer et modéliser ces données de façon robuste.
+          </div>
+          <div class="pipeline-grid">
+            <div class="pipeline-step">
+              <span class="step-badge">1</span>
+              <div class="step-t">⚠️ Ingestion & Audit Qualité</div>
+              <div class="step-d">Détection des anomalies matérielles (1 288 pressions nulles), des contradictions logiques et des doublons stricts.</div>
+            </div>
+            <div class="pipeline-step">
+              <span class="step-badge">2</span>
+              <div class="step-t">🔍 Consensus 6 Détecteurs</div>
+              <div class="step-d">Isolation Forest, LOF, One-Class SVM, Elliptic Env., DBSCAN & Mahalanobis pour isoler les vrais outliers multivariés.</div>
+            </div>
+            <div class="pipeline-step">
+              <span class="step-badge">3</span>
+              <div class="step-t">⚙️ Prétraitement Robuste</div>
+              <div class="step-d">Pipeline Scikit-Learn (imputation médiane, One-Hot Encoding, scaling robuste et filtrage du bruit capteur SNR).</div>
+            </div>
+            <div class="pipeline-step">
+              <span class="step-badge">4</span>
+              <div class="step-t">🏆 Modèles ML Équilibrés</div>
+              <div class="step-d">Random Forest avec pondération de classes, évalué par <b>Balanced Accuracy</b> et <b>F1 Macro</b> pour neutraliser les biais.</div>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    section_title("Choisir un jeu de données", "Cliquez sur « Explorer ce dataset » pour analyser les données, la qualité, les outliers et les modèles")
     cards = []
     for _, r in ov.iterrows():
         q = r["Score qualité"]
-        cards.append({"key": r["key"], "name": dd.label(r["key"]),
-                      "subtitle": f"{int(r['Lignes']):,} lignes · {int(r['Colonnes'])} colonnes".replace(",", " ")
-                                  + ("" if pd.isna(q) else f" · qualité {q:.0f}/100")})
+        cards.append({
+            "key": r["key"],
+            "name": dd.label(r["key"]),
+            "subtitle": f"{int(r['Lignes']):,} lignes · {int(r['Colonnes'])} colonnes"
+                        + ("" if pd.isna(q) else f" · score qualité {q:.0f}/100"),
+        })
     render_dataset_cards(cards)
-    tabs = dict(zip([0, 2, 4], st.tabs(["Vue d'ensemble", "Comparatif des modèles", "Code & architecture"])))
+
+    tabs = dict(zip([0, 5, 2, 4], st.tabs([
+        "📊 Vue d'ensemble",
+        "🎯 Problématique & Défis",
+        "🤖 Comparatif des modèles",
+        "💻 Code & Architecture",
+    ])))
 else:
     _r = ov[ov["key"] == sel].iloc[0]
-    hero("Dataset", dd.label(sel),
-         [("Lignes", f"{int(_r['Lignes']):,}".replace(",", " ")), ("Colonnes", str(int(_r["Colonnes"]))),
-          ("Cible", str(_r["Cible"])), ("Graphiques", str(int(_r["Graphiques"])))])
+    hero("Jeu de Données Sélectionné", dd.label(sel),
+         [("Observations", f"{int(_r['Lignes']):,}".replace(",", " ")),
+          ("Variables", str(int(_r["Colonnes"]))),
+          ("Variable Cible", str(_r["Cible"])),
+          ("Graphiques EDA", str(int(_r["Graphiques"])))])
+
+    # ── Spotlight Problématique du dataset ouvert ──
+    if sel in PROBLEMS_DATA:
+        pinfo = PROBLEMS_DATA[sel]
+        st.markdown(
+            f"""
+            <div class="problem-box" style="border-left: 5px solid {pinfo['accent']};">
+              <div class="problem-title">
+                <span>{pinfo['icon']}</span> {pinfo['title']}
+                <span class="chip" style="margin-left: auto; font-size: .75rem;"><b>{pinfo['tag']}</b></span>
+              </div>
+              <div class="problem-desc">
+                <p><b>Le Défi Concret :</b> {pinfo['problem']}</p>
+                <p><span style="color: var(--bad); font-weight: 700;">⚠️ Risque & Piège :</span> {pinfo['impact']}</p>
+                <p><span style="color: var(--good); font-weight: 700;">✅ Approche Appliquée :</span> {pinfo['solution']}</p>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
     tabs = dict(zip([7, 1, 8, 9, 10, 6, 3],
-                    st.tabs(["Données", "Qualité", "Outliers & bruit", "Corrélations", "Distributions", "Modèle", "Prétraitement"])))
+                    st.tabs(["📋 Données", "💎 Qualité", "🔬 Outliers & Bruit", "🔗 Corrélations", "📈 Distributions", "🤖 Modèle", "⚙️ Prétraitement"])))
 
 # ═════════════════════════ 1. VUE D'ENSEMBLE ═════════════════════════
 if 0 in tabs:
     with tabs[0]:
         scored = ov.dropna(subset=["Score qualité"])
         kpis = [
-            ("Datasets avec rapport", len(reports), "météo + 4 jeux de santé", "info"),
+            ("Jeux avec rapport", len(reports), "Météo + 4 datasets de santé", "info"),
             ("Qualité moyenne", f"{scored['Score qualité'].mean():.1f}/100", "4 datasets scorés (Phase I)", "good"),
         ]
         if not mt.empty:
-            kpis.append(("Balanced accuracy moyenne", f"{mt['Balanced accuracy'].mean():.3f}",
-                         f"{len(mt)} modèles évalués", "good"))
+            kpis.append(("Balanced accuracy moy.", f"{mt['Balanced accuracy'].mean():.3f}",
+                         f"{len(mt)} modèles Random Forest évalués", "good"))
         if db:
             kpis.append(("Tables en base", db["counts"]["datasets"], f"{db['n_categories']} catégories · data.db {db['size_mb']} Mo"))
         kpi_row(kpis)
 
-        section_title("Points d'attention", "calculés à partir des rapports")
+        section_title("Points d'attention prioritaires", "Anomalies et constats majeurs calculés à partir des rapports")
         attention_list(dd.attention_points(reports))
 
-        section_title("Parcours du projet")
+        section_title("Chronologie du projet & Jalons")
         html = "".join(
             f'<div class="tl-i"><div class="tl-d">{s["date"] or "—"}</div><div class="tl-t">{s["title"]}</div>'
             f'<div class="tl-x">{s["detail"]}</div></div>'
@@ -175,7 +346,7 @@ if 0 in tabs:
         )
         st.markdown(f'<div class="tl">{html}</div>', unsafe_allow_html=True)
 
-        section_title("Comparatif des datasets")
+        section_title("Tableau comparatif des jeux de données")
         show = ov.drop(columns=["key"]).copy()
         stretch(st.dataframe, show, hide_index=True,
                 column_config={
@@ -185,27 +356,66 @@ if 0 in tabs:
 
         c1, c2 = st.columns(2)
         with c1:
-            section_title("Score de qualité Phase I", "plus haut = meilleur")
+            section_title("Scores de qualité Phase I", "Score synthétique /100")
             sc = scored[["Dataset", "Score qualité", "Verdict"]]
             chart(alt.Chart(sc).mark_bar(cornerRadiusEnd=6).encode(
-                x=alt.X("Score qualité:Q", scale=alt.Scale(domain=[0, 100])),
+                x=alt.X("Score qualité:Q", scale=alt.Scale(domain=[0, 100]), title="Score de qualité"),
                 y=alt.Y("Dataset:N", sort="-x", title=None),
                 color=alt.Color("Verdict:N", scale=alt.Scale(domain=["good", "moderate", "poor"], range=[GOOD, WARN, BAD]),
-                                legend=alt.Legend(orient="bottom")),
+                                legend=alt.Legend(orient="bottom", title="Verdict")),
                 tooltip=["Dataset", "Score qualité", "Verdict"]), 240)
         with c2:
-            section_title("Problèmes détectés (% du dataset)", "doublons, contradictions, bruit, outliers")
+            section_title("Répartition des anomalies détectées (% du jeu)", "Doublons, contradictions, bruit, outliers")
             issues = ov.melt(id_vars="Dataset", value_vars=["Doublons %", "Contradictions %", "Bruit %", "Outliers %"],
                              var_name="Indicateur", value_name="Valeur").dropna()
             chart(alt.Chart(issues).mark_bar(cornerRadiusEnd=4).encode(
                 y=alt.Y("Dataset:N", title=None),
-                x=alt.X("Valeur:Q", title="%"),
+                x=alt.X("Valeur:Q", title="Pourcentage concerné (%)"),
                 yOffset="Indicateur:N",
                 color=alt.Color("Indicateur:N", scale=alt.Scale(range=[BAD, WARN, INFO, TEAL_2]),
                                 legend=alt.Legend(orient="bottom")),
                 tooltip=["Dataset", "Indicateur", alt.Tooltip("Valeur:Q", format=".2f")]), 300)
-        st.caption("La météo n'a pas de section « data_quality » : bruit = part des variables testées jugées bruitées, "
-                   "doublons issus de la section manquants/doublons ; contradictions et outliers consensuels non calculés.")
+        st.caption("Note : la météo n'a pas de section « data_quality » Phase I standardisée : bruit = part des variables testées jugées bruitées, "
+                   "doublons issus de la section manquants/doublons.")
+
+# ═════════════════════════ NOUVEAU ONGLET : PROBLÉMATIQUE & DÉFIS ═════════════════════════
+if 5 in tabs:
+    with tabs[5]:
+        section_title("Les 5 Problématiques Métier & Défis Techniques", "Comprendre les pièges réels de chaque domaine")
+        st.markdown(
+            """
+            Chaque dataset représente un cas d'étude concret où un modèle de Machine Learning naïf
+            échouerait s'il était appliqué directement sans audit préalable de qualité.
+            """
+        )
+
+        for p_key, p in PROBLEMS_DATA.items():
+            st.markdown(
+                f"""
+                <div class="problem-card" style="margin-bottom: 1rem; border-left: 6px solid {p['accent']};">
+                  <div class="problem-card-h">
+                    <div class="problem-card-t">{p['icon']} {p['title']}</div>
+                    <span class="chip"><b>{p['tag']}</b></span>
+                  </div>
+                  <div class="problem-card-b">
+                    <p style="margin: .3rem 0;"><b>Le Problème Métier :</b> {p['problem']}</p>
+                    <p style="margin: .3rem 0;"><span style="color: var(--bad); font-weight: 700;">⚠️ Risque & Piège Algorithmique :</span> {p['impact']}</p>
+                    <p style="margin: .3rem 0;"><span style="color: var(--good); font-weight: 700;">✅ Solution Technique :</span> {p['solution']}</p>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        section_title("Tableau Synthétique des Défis de Qualité")
+        summary_df = pd.DataFrame([
+            {"Domaine": "🌤️ Météo (weatherHistory)", "Taille": "96 453 lignes", "Anomalie Critique": "1 288 pressions nulles (0 mbar)", "Risque": "Fausse relation physique", "Traitement": "Exclusion des zéros & Random Forest"},
+            {"Domaine": "🧪 COVID-19 (Laboratoire)", "Taille": "1 736 patients", "Anomalie Critique": "Données manquantes massives", "Risque": "Biais d'échantillonnage", "Traitement": "Imputation médiane & F1 Macro"},
+            {"Domaine": "🧠 Maladie de Parkinson", "Taille": "584 patients", "Anomalie Critique": "Déséquilibre de classe fort", "Risque": "Accuracy trompeuse", "Traitement": "Balanced Accuracy & K-Fold stratifié"},
+            {"Domaine": "🍺 Détection d'Alcoolémie", "Taille": "390 observations", "Anomalie Critique": "Contradictions logiques (classe 0, alcool > 0)", "Risque": "Frontière de décision corrompue", "Traitement": "Audit des contradictions & filtre bruit"},
+            {"Domaine": "❤️ Crise Cardiaque", "Taille": "1 190 patients", "Anomalie Critique": "Cholestérol = 0 (zéros masqués)", "Risque": "Valeur biologique absurde", "Traitement": "Imputation ciblée & ROC-AUC"},
+        ])
+        stretch(st.dataframe, summary_df, hide_index=True)
 
 # ═════════════════════════ 2. QUALITÉ ═════════════════════════
 if 1 in tabs:
@@ -214,51 +424,51 @@ if 1 in tabs:
         row = ov[ov["key"] == sel].iloc[0]
         q = row["Score qualité"]
         kpi_row([
-            ("Lignes × colonnes", f"{int(row['Lignes']):,}".replace(",", " ") + f" × {int(row['Colonnes'])}", f"cible : {row['Cible']}"),
-            ("Score qualité", "n/a" if pd.isna(q) else f"{q:.1f}/100", row["Verdict"] if isinstance(row["Verdict"], str) else "section absente",
+            ("Dimensions", f"{int(row['Lignes']):,}".replace(",", " ") + f" × {int(row['Colonnes'])}", f"Cible : {row['Cible']}"),
+            ("Score de qualité", "n/a" if pd.isna(q) else f"{q:.1f}/100", row["Verdict"] if isinstance(row["Verdict"], str) else "section absente",
              {"good": "good", "moderate": "warn", "poor": "bad"}.get(row["Verdict"], "neutral")),
-            ("Doublons", "n/a" if pd.isna(row["Doublons %"]) else f"{row['Doublons %']:.2f} %", None,
+            ("Taux de doublons", "n/a" if pd.isna(row["Doublons %"]) else f"{row['Doublons %']:.2f} %", None,
              "bad" if (pd.notna(row["Doublons %"]) and row["Doublons %"] >= 5) else "good"),
-            ("Bruit", "n/a" if pd.isna(row["Bruit %"]) else f"{row['Bruit %']:.0f} %", "variables bruitées", "warn"),
+            ("Variables bruitées", "n/a" if pd.isna(row["Bruit %"]) else f"{row['Bruit %']:.0f} %", "rapport signal/bruit dégradé", "warn"),
         ])
 
         ind = dd.indicators_df(rep)
         if not ind.empty:
-            section_title("Indicateurs de qualité", "part du dataset concernée par chaque problème")
+            section_title("Indicateurs de qualité détaillés", "Part du dataset impactée par chaque type de défaut")
             chart(alt.Chart(ind).mark_bar(cornerRadiusEnd=6).encode(
                 x=alt.X("issue_percent:Q", title="% concerné"),
                 y=alt.Y("indicator:N", sort="-x", title=None),
                 color=alt.Color("status:N", scale=alt.Scale(domain=["good", "warning", "critical"], range=[GOOD, WARN, BAD]),
-                                legend=alt.Legend(orient="bottom", title="statut")),
+                                legend=alt.Legend(orient="bottom", title="Statut")),
                 tooltip=["indicator", "issue_percent", "status", "detail"]), max(180, 36 * len(ind)))
             stretch(st.dataframe, ind[["indicator", "issue_percent", "status", "detail"]], hide_index=True)
 
         nz = dd.noise_df(rep)
         c1, c2 = st.columns(2)
         with c1:
-            section_title("Bruit par variable", "rapport bruit/signal (plus bas = plus propre)")
+            section_title("Bruit par variable (Noise-to-Signal)", "Plus bas = signal plus propre et stable")
             if nz.empty:
-                st.info("Pas de données de bruit.")
+                st.info("Pas de données de bruit disponibles.")
             else:
                 nz = nz.sort_values("noise_to_signal", ascending=False).head(15)
                 chart(alt.Chart(nz).mark_bar(cornerRadiusEnd=4).encode(
-                    x=alt.X("noise_to_signal:Q", title="bruit / signal"),
+                    x=alt.X("noise_to_signal:Q", title="Ratio Bruit / Signal"),
                     y=alt.Y("feature:N", sort="-x", title=None),
                     color=alt.Color("verdict:N", scale=alt.Scale(domain=["negligible", "low", "moderate", "high"],
                                                                   range=[GOOD, TEAL_2, WARN, BAD]),
-                                    legend=alt.Legend(orient="bottom")),
+                                    legend=alt.Legend(orient="bottom", title="Verdict")),
                     tooltip=["feature", alt.Tooltip("noise_to_signal:Q", format=".3f"), "snr_db", "verdict"]),
                     max(200, 26 * len(nz)))
         with c2:
-            section_title("Corrélations les plus fortes", "Pearson")
+            section_title("Corrélations linéaires les plus fortes", "Coefficients de Pearson")
             cp = dd.corr_pairs_df(rep)
             if cp.empty:
-                st.info("Pas de corrélations.")
+                st.info("Pas de corrélations disponibles.")
             else:
                 chart(alt.Chart(cp).mark_bar(cornerRadiusEnd=4).encode(
-                    x=alt.X("pearson:Q", scale=alt.Scale(domain=[-1, 1])),
+                    x=alt.X("pearson:Q", scale=alt.Scale(domain=[-1, 1]), title="Pearson"),
                     y=alt.Y("paire:N", sort=alt.EncodingSortField("pearson", order="descending"), title=None),
-                    color=alt.Color("pearson:Q", scale=alt.Scale(domain=[-1, 0, 1], range=[INFO, "#d9dedf", BAD]), legend=None),
+                    color=alt.Color("pearson:Q", scale=alt.Scale(domain=[-1, 0, 1], range=[INFO, "#CBD5E1", BAD]), legend=None),
                     tooltip=["paire", alt.Tooltip("pearson:Q", format=".3f"), alt.Tooltip("spearman:Q", format=".3f"), "strength"]),
                     max(200, 30 * len(cp)))
 
@@ -267,63 +477,62 @@ if 1 in tabs:
 # ═════════════════════════ 3. MODÈLES ═════════════════════════
 if 2 in tabs:
     with tabs[2]:
-        section_title("Comparaison des modèles", "Random Forest pondéré · évaluation sur jeu de test + validation croisée")
+        section_title("Comparatif des performances Machine Learning", "Random Forest pondéré · Évaluation test hold-out + validation croisée")
         if mt.empty:
-            st.info("Aucune évaluation de modèle dans les rapports.")
+            st.info("Aucune évaluation de modèle trouvée dans les rapports.")
         else:
             long = mt.melt(id_vars="Dataset", value_vars=["Balanced accuracy", "F1 macro", "CV balanced acc."],
                            var_name="Métrique", value_name="Score")
             chart(alt.Chart(long).mark_bar(cornerRadiusEnd=4).encode(
                 x=alt.X("Dataset:N", title=None, axis=alt.Axis(labelAngle=0)),
-                y=alt.Y("Score:Q", scale=alt.Scale(domain=[0, 1])),
+                y=alt.Y("Score:Q", scale=alt.Scale(domain=[0, 1]), title="Score de performance"),
                 xOffset="Métrique:N",
-                color=alt.Color("Métrique:N", scale=alt.Scale(range=[TEAL, TEAL_2, "#9ad4d6"]), legend=alt.Legend(orient="bottom")),
+                color=alt.Color("Métrique:N", scale=alt.Scale(range=[TEAL, TEAL_2, "#818CF8"]), legend=alt.Legend(orient="bottom")),
                 tooltip=["Dataset", "Métrique", alt.Tooltip("Score:Q", format=".3f")]), 300)
             stretch(st.dataframe, mt.drop(columns=["key"]), hide_index=True)
-
 
 # ═════════════════════════ 3b. MODÈLE (détail du dataset) ═════════════════════════
 if 6 in tabs:
     with tabs[6]:
-        st.subheader(f"Détail · {dd.label(sel)}")
+        st.subheader(f"Détail des performances · {dd.label(sel)}")
         ev = rep.get("model_phase", {}).get("evaluation")
         if ev:
             lift = ev["balanced_accuracy"] - ev["baseline_accuracy"]
             kpi_row([
-                ("Balanced accuracy", f"{ev['balanced_accuracy']:.3f}", f"accuracy de base {ev['baseline_accuracy']:.3f}", "good"),
-                ("F1 macro", f"{ev['f1_macro']:.3f}", None),
-                ("ROC AUC", f"{ev['roc_auc']:.4f}" if ev.get("roc_auc") is not None else "n/a", None),
+                ("Balanced accuracy", f"{ev['balanced_accuracy']:.3f}", f"Baseline naïve : {ev['baseline_accuracy']:.3f}", "good"),
+                ("F1 macro", f"{ev['f1_macro']:.3f}", "Moyenne harmonique des classes"),
+                ("ROC AUC", f"{ev['roc_auc']:.4f}" if ev.get("roc_auc") is not None else "n/a", "Séparabilité probabiliste"),
                 ("Validation croisée", f"{ev['cv_balanced_accuracy_mean']:.3f}", f"± {ev['cv_balanced_accuracy_std']:.3f}"),
-                ("Gain vs base", f"{lift:+.3f}", "balanced acc. − accuracy de base", "info"),
+                ("Gain vs baseline", f"{lift:+.3f}", "Gain net vs classifieur majoritaire", "info"),
             ])
         else:
-            st.info("Ce rapport ne contient pas d'évaluation du modèle (cas du rapport météo enregistré le 25 oct.).")
+            st.info("Ce rapport ne contient pas d'évaluation du modèle standardisée.")
 
         c1, c2 = st.columns(2)
         with c1:
             imp = dd.importance_df(rep)
             if not imp.empty:
-                section_title("Importance des variables", imp["method"].iloc[0])
+                section_title("Importance des variables prédictives", imp["method"].iloc[0])
                 chart(alt.Chart(imp).mark_bar(cornerRadiusEnd=4, color=TEAL).encode(
-                    x=alt.X("value:Q", title=None),
+                    x=alt.X("value:Q", title="Importance"),
                     y=alt.Y("feature:N", sort="-x", title=None),
                     tooltip=["feature", alt.Tooltip("value:Q", format=".2f")]), max(200, 28 * len(imp)))
         with c2:
             bal = dd.class_balance_df(rep)
             if not bal.empty:
-                section_title("Équilibre des classes", "variable cible")
+                section_title("Équilibre des classes cibles", "Distribution de la variable cible")
                 chart(alt.Chart(bal).mark_bar(cornerRadiusEnd=4, color=TEAL_2).encode(
                     x=alt.X("classe:N", title=None, axis=alt.Axis(labelAngle=0)),
-                    y=alt.Y("effectif:Q"),
+                    y=alt.Y("effectif:Q", title="Nombre d'observations"),
                     tooltip=["classe", "effectif", alt.Tooltip("pourcentage:Q", format=".2f")]), 240)
 
         cm = dd.confusion_df(rep)
         if not cm.empty:
-            section_title("Matrice de confusion", "jeu de test")
-            base = alt.Chart(cm).encode(x=alt.X("prédit:N", title="prédit"), y=alt.Y("réel:N", title="réel"))
-            heat = base.mark_rect(cornerRadius=6).encode(color=alt.Color("n:Q", scale=alt.Scale(range=["#eaf4f4", TEAL]), legend=None))
+            section_title("Matrice de confusion", "Sur jeu de test indépendant")
+            base = alt.Chart(cm).encode(x=alt.X("prédit:N", title="Prédiction du modèle"), y=alt.Y("réel:N", title="Vérité terrain (réel)"))
+            heat = base.mark_rect(cornerRadius=6).encode(color=alt.Color("n:Q", scale=alt.Scale(range=["#EEF2FF", TEAL]), legend=None))
             txt = base.mark_text(fontSize=16, fontWeight="bold").encode(
-                text="n:Q", color=alt.condition(alt.datum.n > float(cm["n"].max()) / 2, alt.value("white"), alt.value("#10222A")))
+                text="n:Q", color=alt.condition(alt.datum.n > float(cm["n"].max()) / 2, alt.value("white"), alt.value("#0F172A")))
             chart(heat + txt, 260)
 
         plots_carousel(["model_phase"])
@@ -334,26 +543,26 @@ if 3 in tabs:
         st.subheader(dd.label(sel))
         plan = dd.plan_df(rep)
         if plan.empty:
-            st.info("Ce rapport n'a pas de section « interpretation » (cas du rapport météo).")
+            st.info("Ce rapport n'a pas de section d'interprétation explicite.")
             pre = rep.get("model_phase", {}).get("preprocessing")
             if pre:
                 section_title("Pipeline de prétraitement du modèle météo")
-                st.write("**Numérique** : " + " → ".join(pre.get("numerical_pipeline", [])))
-                st.write("**Catégoriel** : " + " → ".join(pre.get("categorical_pipeline", [])))
+                st.write("**Pipeline numérique** : " + " → ".join(pre.get("numerical_pipeline", [])))
+                st.write("**Pipeline catégoriel** : " + " → ".join(pre.get("categorical_pipeline", [])))
                 st.caption(f"{len(pre.get('numerical_features', []))} variables numériques, "
-                           f"{len(pre.get('categorical_features', []))} catégorielle(s), cible {pre.get('target_feature')}.")
+                           f"{len(pre.get('categorical_features', []))} catégorielle(s), cible : {pre.get('target_feature')}.")
         else:
             n_app = int((plan["status"] == "applied").sum())
             n_rec = int((plan["status"] == "recommended").sum())
-            kpi_row([("Étapes appliquées", n_app, "déjà dans le pipeline", "good"),
-                     ("Étapes recommandées", n_rec, "restent à faire", "warn")])
+            kpi_row([("Étapes appliquées", n_app, "Déjà actives dans le pipeline", "good"),
+                     ("Étapes recommandées", n_rec, "Recommandations futures", "warn")])
             c1, c2 = st.columns(2)
             with c1:
-                section_title("Plan de prétraitement")
+                section_title("Plan de prétraitement appliqué")
                 stretch(st.dataframe, plan.rename(columns={"step": "Étape", "status": "Statut", "reason": "Constat"}),
                         hide_index=True)
             with c2:
-                section_title("Recommandations priorisées")
+                section_title("Recommandations d'amélioration")
                 rec = dd.recommendations_df(rep)
                 stretch(st.dataframe, rec.rename(columns={"priority": "Priorité", "area": "Zone", "finding": "Constat",
                                                           "action": "Action"}), hide_index=True)
@@ -365,20 +574,20 @@ if 4 in tabs:
     with tabs[4]:
         code = dd.code_inventory()
         kpi_row([
-            ("Scripts Python", len(code), "hors dashboard"),
-            ("Lignes de code", f"{int(code['Lignes'].sum()):,}".replace(",", " "), None),
-            ("Plus gros module", code.iloc[0]["Fichier"], f"{int(code.iloc[0]['Lignes'])} lignes"),
+            ("Scripts Python", len(code), "Composants du projet"),
+            ("Lignes de code totales", f"{int(code['Lignes'].sum()):,}".replace(",", " "), "Architecture MVC"),
+            ("Module le plus dense", code.iloc[0]["Fichier"], f"{int(code.iloc[0]['Lignes'])} lignes"),
         ])
         c1, c2 = st.columns([3, 2])
         with c1:
-            section_title("Lignes de code par fichier", "couleur = couche de l'architecture")
+            section_title("Volume de code par module", "Couleur = Couche logicielle (Model, View, Stockage)")
             chart(alt.Chart(code).mark_bar(cornerRadiusEnd=4).encode(
-                x=alt.X("Lignes:Q"), y=alt.Y("Fichier:N", sort="-x", title=None),
+                x=alt.X("Lignes:Q", title="Nombre de lignes"), y=alt.Y("Fichier:N", sort="-x", title=None),
                 color=alt.Color("Couche:N", scale=alt.Scale(range=[TEAL, TEAL_2, INFO, WARN, MUTED]),
-                                legend=alt.Legend(orient="bottom")),
+                                legend=alt.Legend(orient="bottom", title="Couche")),
                 tooltip=["Fichier", "Couche", "Lignes", "Rôle"]), max(260, 26 * len(code)))
         with c2:
-            section_title("Lignes par couche")
+            section_title("Répartition par couche")
             by_layer = code.groupby("Couche", as_index=False)["Lignes"].sum()
             chart(alt.Chart(by_layer).mark_arc(innerRadius=60).encode(
                 theta="Lignes:Q",
@@ -388,16 +597,16 @@ if 4 in tabs:
         stretch(st.dataframe, code, hide_index=True)
 
         if db:
-            section_title("Base SQLite data.db", f"{db['size_mb']} Mo")
+            section_title("Base relationnelle SQLite data.db", f"Taille : {db['size_mb']} Mo")
             c = db["counts"]
-            kpi_row([("Rapports", c["reports"]), ("Sections", c["sections"]), ("Insights", c["insights"]),
-                     ("Graphiques (BLOB)", c["plots"]), ("Tables importées", c["datasets"])])
+            kpi_row([("Rapports stockés", c["reports"]), ("Sections", c["sections"]), ("Insights", c["insights"]),
+                     ("Graphiques BLOB", c["plots"]), ("Catalogues de données", c["datasets"])])
             cats = db["categories"]
             chart(alt.Chart(cats).mark_bar(cornerRadiusEnd=4, color=TEAL).encode(
-                x=alt.X("Tables:Q"), y=alt.Y("Catégorie:N", sort="-x", title=None),
+                x=alt.X("Tables:Q", title="Nombre de tables"), y=alt.Y("Catégorie:N", sort="-x", title=None),
                 tooltip=["Catégorie", "Tables", "Lignes"]), max(220, 28 * len(cats)))
 
-# ═════════════════════════ 0b. DONNÉES (comme la vue d'ensemble de app.py) ═════════════════════════
+# ═════════════════════════ 0b. DONNÉES ═════════════════════════
 if 7 in tabs:
     with tabs[7]:
         render_dataset_detail(dd.ROOT / "data.db", dd.DB_DATASET_IDS[sel], key_prefix=f"ds_{sel}")
