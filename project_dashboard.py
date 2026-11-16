@@ -19,6 +19,7 @@ import dashboard_charts as ch  # noqa: E402
 from dataset_cards import render_dataset_cards  # noqa: E402
 from dataset_overview import render_dataset_detail  # noqa: E402
 from outlier_view import render_boxplot, render_outliers_noise  # noqa: E402
+from regression_view import render_regression_lab  # noqa: E402
 from theme import apply_theme, attention_list, brand, hero, kpi_row, section_title  # noqa: E402
 
 apply_theme()
@@ -620,7 +621,10 @@ if 2 in tabs:
 # ═════════════════════════ 3c. ÉVALUATION DES MODÈLES (Phase II) ═════════════════════════
 if 11 in tabs:
     with tabs[11]:
-        model_lab_panel(rep, sel)
+        if rep.get("regression_lab"):          # météo : régressions (Température / Pression seules)
+            render_regression_lab(rep, sel)
+        else:
+            model_lab_panel(rep, sel)
         plots_carousel(["model_lab"], "Graphiques · Évaluation des modèles")
         plots_carousel(["model_phase"], "Graphiques · Random Forest (importance des variables)")
 
