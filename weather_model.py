@@ -776,6 +776,208 @@ class WeatherEDAModel:
             "insights": insights,
         }
 
+    # ---------------------------------------------------------- 9. interpretation
+    def interpretation(self):
+        """Turn the weather EDA findings into an interpretation and an action plan.
+
+        Same schema as the four medical datasets (summary / findings / recommendations /
+        preprocessing_plan / insights) so the Prétraitement tab renders identically.
+        """
+        meta = self.report["meta"]
+        desc = self.report["description"]
+        md = self.report["missing_duplicates"]
+        out = self.report["outliers"]
+        noise = self.report["noise"]
+        corr = self.report["correlation"]
+        model = self.report["model_phase"]
+
+        ev = model.get("evaluation") or {}
+        fi = model.get("feature_importance") or {}
+        imp = (fi.get("ranked_features") or [None])[0]
+        perm = (fi.get("permutation_ranking") or [None])[0]
+        target = model.get("target_balance") or {}
+
+        missing_total = int((md.get("missing") or {}).get("total_cells", 0))
+        missing_cols = [c for c in ((md.get("missing") or {}).get("columns") or []) if c.get("count")]
+        dups = md.get("duplicates") or {}
+        invalid = meta.get("impossible_values_excluded") or {}
+        invalid_total = int(sum(invalid.values()))
+        constant = desc.get("constant_columns") or []
+        pairs = corr.get("pairs") or []
+        strong = [p for p in pairs if abs(p.get("pearson", 0)) >= 0.8]
+        top_pair = pairs[0] if pairs else None
+        ns = noise.get("dataset_summary") or {}
+        noisy = ns.get("noisy_features") or []
+        error_features = ns.get("error_features") or []
+        out_features = out.get("features") or []
+        out_total = int(sum(f.get("iqr_outliers", 0) for f in out_features))
+        worst_out = max(out_features, key=lambda f: f.get("iqr_outliers", 0), default=None)
+
+        findings = [
+            f"{meta['n_rows']:,} hourly observations across {meta['n_cols']} columns "
+            f"({len(meta.get('numeric_columns', []))} numeric, "
+            f"{len(meta.get('categorical_columns', []))} categorical)."
+        ]
+        if missing_total:
+            worst_missing = max(missing_cols, key=lambda c: c["count"])
+            findings.append(
+                f"{missing_total:,} missing cell(s), concentrated in '{worst_missing['name']}' "
+                f"({worst_missing['count']:,} rows, {worst_missing['percent']}%).")
+        if dups.get("count"):
+            findings.append(
+                f"{dups['count']} exact duplicate row(s) ({dups.get('percent', 0)}%).")
+        if constant:
+            findings.append(f"Constant column(s) with no information: {', '.join(constant)}.")
+        if invalid_total:
+            detail = ", ".join(f"'{k}' {v:,}" for k, v in sorted(invalid.items(), key=lambda kv: -kv[1])[:2])
+            findings.append(
+                f"{invalid_total:,} physically impossible reading(s) were masked as missing ({detail}).")
+        if ns.get("has_noise"):
+            findings.append(
+                f"{ns.get('features_with_noise', 0)}/{ns.get('features_checked', 0)} tested feature(s) show "
+                f"noise (mean noise-to-signal {(ns.get('mean_noise_to_signal') or 0):.3f}); "
+                f"error-like features: {', '.join(error_features) or 'none'}.")
+        if out_total:
+            worst = (f"'{worst_out['feature']}' {worst_out['iqr_outliers']:,} "
+                     f"({worst_out.get('iqr_percent', 0)}%)" if worst_out else "")
+            findings.append(
+                f"{out_total:,} IQR outlier reading(s) across {len(out_features)} feature(s), "
+                f"most in {worst}.")
+        if top_pair:
+            findings.append(
+                f"Strongest association: '{top_pair['a']}' / '{top_pair['b']}' "
+                f"(Pearson r={top_pair['pearson']:.2f}, Spearman {top_pair['spearman']:.2f}).")
+        if imp:
+            findings.append(
+                f"Top model driver (impurity): '{imp['feature']}' ({imp['percentage']}% of importance).")
+        if ev.get("balanced_accuracy") is not None:
+            findings.append(
+                f"Predictive check: accuracy {ev['accuracy']:.3f}, balanced accuracy "
+                f"{ev['balanced_accuracy']:.3f}, macro-F1 {ev.get('f1_macro', 0):.3f} on the last 25% of the series.")
+
+        recommendations: list[dict] = []
+
+        def add(priority: str, area: str, finding: str, action: str) -> None:
+            recommendations.append({"priority": priority, "area": area,
+                                    "finding": finding, "action": action})
+
+        if missing_total:
+            worst_missing = max(missing_cols, key=lambda c: c["count"])
+            add("high", "Missing category",
+                f"'{worst_missing['name']}' has {worst_missing['count']:,} missing values "
+                f"({worst_missing['percent']}%).",
+                "Decide explicitly: either impute with the most frequent value or keep a dedicated "
+                "'Unknown' class. Do not drop rows here: they carry valid temperature/visibility data.")
+        if dups.get("count"):
+            add("medium", "Duplicate rows",
+                f"{dups['count']} exact duplicate row(s) ({dups.get('percent', 0)}%).",
+                "Drop them before cross-validation unless they are genuine repeated readings; "
+                "otherwise the same hour is scored twice and scores become optimistic.")
+        if constant:
+            add("high", "Constant column",
+                f"{', '.join(constant)} has a single value and therefore zero predictive power.",
+                "Drop it before modelling (done implicitly by the ColumnTransformer, but it should "
+                "also be removed from the stored features).")
+        if invalid_total:
+            add("medium", "Out-of-range values",
+                f"{invalid_total:,} reading(s) outside the physical range were masked.",
+                "Add the same range checks to the ingestion step and log/reject abnormal readings "
+                "instead of silently storing them (e.g. Pressure = 0 mb during a storm).")
+        if ns.get("has_noise"):
+            add("medium", "Measurement noise",
+                f"{len(noisy)} feature(s) flagged as noisy: {', '.join(noisy)}.",
+                "Prefer robust scaling or tree models; if the noise is sensor jitter, aggregate "
+                "hourly readings or apply a short rolling median before training.")
+        if out_total:
+            add("medium", "Outliers",
+                f"{out_total:,} IQR outlier reading(s); extremes are usually real weather events.",
+                "Do not delete them blindly: check that they correspond to storms/heatwaves, then "
+                "use robust metrics (balanced accuracy / F1) and tree models rather than winsorising.")
+        if strong:
+            p = strong[0]
+            add("medium", "Redundant features",
+                f"'{p['a']}' and '{p['b']}' are almost the same signal (r={p['pearson']:.2f}).",
+                "Keep one of the pair or combine them; otherwise importance is split between two "
+                "identical columns and multicollinearity makes coefficients unstable.")
+        if target.get("severity") not in (None, "balanced"):
+            add("medium", "Class imbalance",
+                f"Target '{target.get('target_feature')}' has ratio {target.get('imbalance_ratio')}:1 "
+                f"({target.get('severity')}).",
+                "Use class_weight='balanced' (already configured) and report balanced accuracy / "
+                "macro-F1 instead of raw accuracy, which is dominated by 'rain'.")
+        if imp:
+            add("low", "Feature importance",
+                f"'{imp['feature']}' is the strongest impurity driver; permutation top is "
+                f"'{perm['feature'] if perm else 'n/a'}'.",
+                "Retain the top drivers but confirm they are available at prediction time; drop "
+                "features whose permutation importance is near zero.")
+        if ev.get("balanced_accuracy") is not None and ev["balanced_accuracy"] < 0.80:
+            add("high", "Model performance",
+                f"Balanced accuracy is only {ev['balanced_accuracy']:.3f}.",
+                "Collect more history, engineer lag/seasonal features, or revisit the label "
+                "definition before deploying the precipitation model.")
+
+        priority_rank = {"high": 0, "medium": 1, "low": 2}
+        recommendations.sort(key=lambda r: (priority_rank.get(r["priority"], 3), r["area"]))
+
+        applied = [
+            {"step": "Physical range validation", "status": "applied",
+             "reason": f"{invalid_total:,} impossible reading(s) masked before statistics"},
+            {"step": "Median / mode imputation", "status": "applied",
+             "reason": "Numeric median and categorical most-frequent imputation in the Pipeline"},
+            {"step": "StandardScaler + OneHotEncoder", "status": "applied",
+             "reason": "Preprocessing inside the sklearn ColumnTransformer"},
+            {"step": "Class weighting", "status": "applied",
+             "reason": "class_weight='balanced' because the target is imbalanced"},
+            {"step": "Time-based hold-out", "status": "applied",
+             "reason": "Train on the first 75% and test on the last 25% to avoid hourly leakage"},
+        ]
+        pending = [
+            {"step": "Drop constant column(s)", "status": "recommended",
+             "reason": f"{len(constant)} constant column(s): {', '.join(constant) or 'none'}"},
+            {"step": "Drop exact duplicates", "status": "recommended",
+             "reason": f"{dups.get('count', 0)} duplicate row(s) detected"},
+            {"step": "Handle missing target values", "status": "recommended",
+             "reason": f"{missing_total:,} missing cell(s), mainly in the target column"},
+            {"step": "Remove redundant features", "status": "recommended",
+             "reason": f"{len(strong)} pair(s) with |r| >= 0.8"},
+            {"step": "Outlier review / robust modelling", "status": "recommended",
+             "reason": f"{out_total:,} IQR outlier reading(s) to validate with a domain expert"},
+        ]
+
+        summary = " ".join(findings[:4])
+        if recommendations:
+            top = recommendations[0]
+            next_action = f"First action ({top['priority']}): {top['action']}"
+        else:
+            next_action = "No blocking data-quality action detected."
+        insights = findings + [next_action]
+
+        # Recommendation priority chart
+        if recommendations:
+            counts = {p: sum(1 for r in recommendations if r["priority"] == p)
+                      for p in ("high", "medium", "low")}
+            fig, ax = plt.subplots(figsize=(6.5, 3.6))
+            ax.bar(list(counts), list(counts.values()),
+                   color=["#BD4A32", "#E0A458", "#2B5E4B"])
+            for idx, v in enumerate(counts.values()):
+                ax.text(idx, v, str(v), ha="center", va="bottom", fontsize=9)
+            ax.set_ylabel("recommendations")
+            ax.set_title("Action plan by priority - Weather")
+            self._save_plot(fig, "interpretation_priorities", "Recommendations by priority",
+                            "interpretation")
+
+        return {
+            "description": "Interpretation of the weather EDA results and the concrete actions to apply: "
+                           "what to fix, what to mask, what to keep for modelling, and which checks are "
+                           "already active in the Pipeline.",
+            "summary": summary,
+            "findings": findings,
+            "recommendations": recommendations,
+            "preprocessing_plan": applied + pending,
+            "insights": insights,
+        }
+
     # ---------------------------------------------------------- run / save
     def run(self):
         self.load()
@@ -795,6 +997,7 @@ class WeatherEDAModel:
         self._section("correlation", self.correlation)
         self._section("kde", self.kde)
         self._section("model_phase", self.model_phase)
+        self._section("interpretation", self.interpretation)
         self.report["plots"] = self.plots
         return clean(self.report)
 

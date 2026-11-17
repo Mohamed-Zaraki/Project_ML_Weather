@@ -80,6 +80,16 @@ from quality_multi import (
 PALETTE = ["#8C572A", "#2B5E4B", "#BD4A32", "#5B7C99", "#C9A227", "#7A6C9D", "#4C956C"]
 
 
+def vote_axis_label(count: int, n_detectors: int) -> str:
+    """Name for one bar of the detector-agreement chart (0 .. n detectors)."""
+    count = int(count)
+    if count <= 0:
+        return "None (normal)"
+    if n_detectors and count >= n_detectors:
+        return f"All {n_detectors} (unanimous)"
+    return "1 detector" if count == 1 else f"{count} detectors"
+
+
 # --------------------------------------------------------------------------- #
 # Utilities
 # --------------------------------------------------------------------------- #
@@ -603,12 +613,15 @@ class BaseDatasetEDAModel:
             self._save_plot(fig, "outliers_methods", "Outlier detector comparison", "outliers")
 
             votes = np.asarray(ml["vote_counts"])
-            fig, ax = plt.subplots(figsize=(7, 3.8))
+            n_detectors = len(ml["methods_used"])
+            fig, ax = plt.subplots(figsize=(8.8, 4.2))
             vals, cnt = np.unique(votes, return_counts=True)
-            ax.bar(vals, cnt, color="#2B5E4B")
-            ax.set_xlabel("number of detectors flagging the sample")
+            labels = [vote_axis_label(int(v), n_detectors) for v in vals]
+            ax.bar(labels, cnt, color="#2B5E4B")
+            ax.set_xlabel("detectors that flagged the sample")
             ax.set_ylabel("samples")
             ax.set_title(f"Detector agreement - {self.label}")
+            plt.setp(ax.get_xticklabels(), rotation=18, ha="right")
             self._save_plot(fig, "outliers_votes", "Detector agreement", "outliers")
 
             X, cols = _clean_numeric_matrix(self.df_valid[self.continuous_cols])
