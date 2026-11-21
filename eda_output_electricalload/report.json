@@ -1,0 +1,622 @@
+{
+  "quality": {
+    "description": "Data-quality audit: missing values, duplicate rows, and noise-to-signal ratio per feature.",
+    "missing_train": {
+      "datetime": 0,
+      "year": 0,
+      "month": 0,
+      "day": 0,
+      "hourOfDay": 0,
+      "dayOfWeek": 0,
+      "weekend": 0,
+      "holiday": 0,
+      "Holiday_ID": 0,
+      "week_X-2": 0,
+      "week_X-3": 0,
+      "week_X-4": 0,
+      "MA_X-4": 0,
+      "T2M_toc": 0,
+      "DEMAND": 0,
+      "split": 0,
+      "gap": 0
+    },
+    "missing_test": {
+      "datetime": 0,
+      "year": 0,
+      "month": 0,
+      "day": 0,
+      "hourOfDay": 0,
+      "dayOfWeek": 0,
+      "weekend": 0,
+      "holiday": 0,
+      "Holiday_ID": 0,
+      "week_X-2": 0,
+      "week_X-3": 0,
+      "week_X-4": 0,
+      "MA_X-4": 0,
+      "T2M_toc": 0,
+      "DEMAND": 0,
+      "split": 0,
+      "gap": 0
+    },
+    "duplicates": {
+      "train": 0,
+      "test": 0
+    },
+    "noise_snr": [
+      {
+        "feature": "week_X-2",
+        "nsr": 0.0653,
+        "snr_db": 23.7
+      },
+      {
+        "feature": "week_X-3",
+        "nsr": 0.0653,
+        "snr_db": 23.7
+      },
+      {
+        "feature": "week_X-4",
+        "nsr": 0.0654,
+        "snr_db": 23.68
+      },
+      {
+        "feature": "MA_X-4",
+        "nsr": 0.0589,
+        "snr_db": 24.59
+      },
+      {
+        "feature": "T2M_toc",
+        "nsr": 0.0324,
+        "snr_db": 29.8
+      },
+      {
+        "feature": "DEMAND",
+        "nsr": 0.0654,
+        "snr_db": 23.69
+      }
+    ],
+    "insights": [
+      "Train: 36,720 rows × 17 cols | Test: 168 rows × 17 cols.",
+      "Missing values: Train=0, Test=0 (0% missing).",
+      "Duplicate rows: Train=0, Test=0 (0 duplicates).",
+      "'week_X-2': NSR=0.0653, SNR=23.7 dB → moderate noise.",
+      "'week_X-3': NSR=0.0653, SNR=23.7 dB → moderate noise.",
+      "'week_X-4': NSR=0.0654, SNR=23.68 dB → moderate noise.",
+      "'MA_X-4': NSR=0.0589, SNR=24.59 dB → moderate noise.",
+      "'T2M_toc': NSR=0.0324, SNR=29.8 dB → clean.",
+      "'DEMAND': NSR=0.0654, SNR=23.69 dB → moderate noise."
+    ],
+    "plots": [
+      "quality_noise_snr"
+    ]
+  },
+  "trends": {
+    "description": "Temporal trend analysis: annual and monthly mean DEMAND, hourly load profile by year, and MA_X-4 distribution per year.",
+    "annual": [
+      {
+        "year": 2015,
+        "MA_X-4": 1129.044153,
+        "DEMAND": 1134.725333
+      },
+      {
+        "year": 2016,
+        "MA_X-4": 1158.968721,
+        "DEMAND": 1157.185799
+      },
+      {
+        "year": 2017,
+        "MA_X-4": 1180.817814,
+        "DEMAND": 1182.315069
+      },
+      {
+        "year": 2018,
+        "MA_X-4": 1204.051559,
+        "DEMAND": 1205.676767
+      },
+      {
+        "year": 2019,
+        "MA_X-4": 1212.668297,
+        "DEMAND": 1225.383804
+      }
+    ],
+    "insights": [
+      "DEMAND grew steadily from 2015 to 2019; the annual mean rose each year.",
+      "MA_X-4 closely tracks DEMAND, confirming it is a strong lagged predictor.",
+      "The hourly profile shows a double peak: morning (~9 h) and evening (~20 h), consistent with residential electricity patterns.",
+      "The monthly heatmap reveals seasonal peaks (austral summer months) reflecting air-conditioning load in a tropical / subtropical grid."
+    ],
+    "plots": [
+      "trend_annual_ma_demand",
+      "trend_monthly_heatmap",
+      "trend_hourly_profile"
+    ]
+  },
+  "outliers": {
+    "description": "Unsupervised anomaly detection: Isolation Forest, One-Class SVM, LOF and Elliptic Envelope (contamination=5%). Consensus = flagged by ≥2 detectors; Unanimous = all 4.",
+    "methods": {
+      "Isolation Forest": {
+        "outlier_count": 1836,
+        "outlier_percent": 5.0
+      },
+      "One-Class SVM": {
+        "outlier_count": 1835,
+        "outlier_percent": 5.0
+      },
+      "LOF": {
+        "outlier_count": 1836,
+        "outlier_percent": 5.0
+      },
+      "Elliptic Envelope": {
+        "outlier_count": 1836,
+        "outlier_percent": 5.0
+      }
+    },
+    "consensus_outliers": {
+      "count": 1859,
+      "percent": 5.06
+    },
+    "unanimous_outliers": {
+      "count": 65
+    },
+    "insights": [
+      "Isolation Forest: 1836 anomalies (5.0%).",
+      "One-Class SVM: 1835 anomalies (5.0%).",
+      "LOF: 1836 anomalies (5.0%).",
+      "Elliptic Envelope: 1836 anomalies (5.0%).",
+      "Consensus (≥ 2 detectors): 1859 samples (5.06%).",
+      "Unanimous (all 4 detectors): 65 samples.",
+      "Anomalies cluster mostly in extreme off-peak hours and very high or low DEMAND — likely special events, maintenance shutdowns or public holidays."
+    ],
+    "plots": [
+      "outliers_detector_comparison",
+      "outliers_vote_distribution",
+      "outliers_pca_map",
+      "outliers_demand_consensus",
+      "outliers_per_detector"
+    ]
+  },
+  "noise": {
+    "description": "Noise analysis using second-difference noise estimator (time-series ordered) and local rolling-median residuals. NSR < 0.05 = clean; 0.05–0.15 = low; 0.15–0.35 = moderate; > 0.35 = high.",
+    "features": [
+      {
+        "feature": "week_X-2",
+        "noise_std": 15.1837,
+        "signal_std": 232.4452,
+        "nsr": 0.06532,
+        "snr_db": 23.7,
+        "verdict": "low noise"
+      },
+      {
+        "feature": "week_X-3",
+        "noise_std": 15.1857,
+        "signal_std": 232.3941,
+        "nsr": 0.06534,
+        "snr_db": 23.7,
+        "verdict": "low noise"
+      },
+      {
+        "feature": "week_X-4",
+        "noise_std": 15.1719,
+        "signal_std": 231.8445,
+        "nsr": 0.06544,
+        "snr_db": 23.68,
+        "verdict": "low noise"
+      },
+      {
+        "feature": "MA_X-4",
+        "noise_std": 13.4432,
+        "signal_std": 228.1271,
+        "nsr": 0.05893,
+        "snr_db": 24.59,
+        "verdict": "low noise"
+      },
+      {
+        "feature": "T2M_toc",
+        "noise_std": 0.0548,
+        "signal_std": 1.6922,
+        "nsr": 0.03236,
+        "snr_db": 29.8,
+        "verdict": "clean"
+      },
+      {
+        "feature": "DEMAND",
+        "noise_std": 15.1985,
+        "signal_std": 232.4414,
+        "nsr": 0.06539,
+        "snr_db": 23.69,
+        "verdict": "low noise"
+      }
+    ],
+    "insights": [
+      "'week_X-2': NSR=0.06532, SNR=23.7 dB → low noise.",
+      "'week_X-3': NSR=0.06534, SNR=23.7 dB → low noise.",
+      "'week_X-4': NSR=0.06544, SNR=23.68 dB → low noise.",
+      "'MA_X-4': NSR=0.05893, SNR=24.59 dB → low noise.",
+      "'T2M_toc': NSR=0.03236, SNR=29.8 dB → clean.",
+      "'DEMAND': NSR=0.06539, SNR=23.69 dB → low noise.",
+      "MA_X-4 and week_X-* are moving averages, so they are inherently smoother than raw DEMAND. Their lower NSR reflects the averaging effect, not better meter quality.",
+      "DEMAND exhibits slightly higher residuals around peaks (morning and evening), which correspond to genuine load volatility, not instrument noise."
+    ],
+    "plots": [
+      "noise_nsr_bars",
+      "noise_residual_demand",
+      "noise_residual_ma_x_4",
+      "noise_residual_t2m_toc"
+    ]
+  },
+  "correlation": {
+    "description": "Pairwise Pearson & Spearman correlations, MA_X-4 vs DEMAND scatter, holiday/weekend demand distributions, and |DEMAND − MA_X-4| gap anomaly analysis by day, month and hour.",
+    "pearson_ma4_demand": 0.9205,
+    "gap_threshold_mw": 202.29,
+    "big_gap_days": [
+      {
+        "year": 2017,
+        "month": 6,
+        "day": 27,
+        "gap": 883.689088
+      },
+      {
+        "year": 2019,
+        "month": 1,
+        "day": 20,
+        "gap": 826.293096
+      },
+      {
+        "year": 2017,
+        "month": 3,
+        "day": 21,
+        "gap": 524.437025
+      },
+      {
+        "year": 2017,
+        "month": 7,
+        "day": 1,
+        "gap": 513.966325
+      },
+      {
+        "year": 2017,
+        "month": 2,
+        "day": 28,
+        "gap": 458.12274
+      },
+      {
+        "year": 2016,
+        "month": 1,
+        "day": 1,
+        "gap": 429.002347
+      },
+      {
+        "year": 2015,
+        "month": 4,
+        "day": 3,
+        "gap": 424.572003
+      },
+      {
+        "year": 2016,
+        "month": 2,
+        "day": 9,
+        "gap": 411.109437
+      },
+      {
+        "year": 2017,
+        "month": 4,
+        "day": 14,
+        "gap": 404.905261
+      },
+      {
+        "year": 2016,
+        "month": 3,
+        "day": 25,
+        "gap": 401.730656
+      },
+      {
+        "year": 2017,
+        "month": 3,
+        "day": 17,
+        "gap": 392.966775
+      },
+      {
+        "year": 2017,
+        "month": 2,
+        "day": 27,
+        "gap": 389.109515
+      },
+      {
+        "year": 2015,
+        "month": 11,
+        "day": 3,
+        "gap": 383.811852
+      },
+      {
+        "year": 2016,
+        "month": 5,
+        "day": 2,
+        "gap": 381.749982
+      },
+      {
+        "year": 2015,
+        "month": 12,
+        "day": 25,
+        "gap": 379.526842
+      }
+    ],
+    "insights": [
+      "MA_X-4 ↔ DEMAND: Pearson r = 0.9205 — extremely strong linear relationship.",
+      "week_X-2, week_X-3, week_X-4 also correlate strongly with DEMAND (r > 0.95), as they are lagged weekly snapshots of the same series.",
+      "Holiday rows show a systematically lower DEMAND distribution (shifted left), confirming that public holidays suppress industrial and commercial load.",
+      "Weekend rows similarly show lower DEMAND than weekday rows, but less pronounced than holidays.",
+      "Extreme gap (> 202.3 MW) occurs in 735 hours (2.0%). Largest gaps tend to cluster around unexpected demand spikes not captured by the 4-week moving average."
+    ],
+    "plots": [
+      "correlation_heatmaps",
+      "correlation_ma4_demand",
+      "correlation_demand_holiday_weekend",
+      "correlation_demand_ma_gap",
+      "correlation_top_gap_days"
+    ]
+  },
+  "distribution": {
+    "description": "KDE plots with histogram overlay, skewness/kurtosis summary table, and conditional DEMAND distribution by holiday flag.",
+    "skewness_table": [
+      {
+        "feature": "week_X-2",
+        "skewness": 0.2049,
+        "kurtosis": -0.9159,
+        "shape": "Symmetric"
+      },
+      {
+        "feature": "week_X-3",
+        "skewness": 0.2024,
+        "kurtosis": -0.9241,
+        "shape": "Symmetric"
+      },
+      {
+        "feature": "week_X-4",
+        "skewness": 0.2045,
+        "kurtosis": -0.9249,
+        "shape": "Symmetric"
+      },
+      {
+        "feature": "MA_X-4",
+        "skewness": 0.1897,
+        "kurtosis": -1.0597,
+        "shape": "Symmetric"
+      },
+      {
+        "feature": "T2M_toc",
+        "skewness": 0.5174,
+        "kurtosis": -0.1042,
+        "shape": "Right-skewed"
+      },
+      {
+        "feature": "DEMAND",
+        "skewness": 0.2071,
+        "kurtosis": -0.9161,
+        "shape": "Symmetric"
+      }
+    ],
+    "insights": [
+      "'week_X-2' is approximately symmetric (skew=0.205).",
+      "'week_X-3' is approximately symmetric (skew=0.202).",
+      "'week_X-4' is approximately symmetric (skew=0.204).",
+      "'MA_X-4' is approximately symmetric (skew=0.190).",
+      "'T2M_toc' is right-skewed (skew=0.517): tail toward high demand — likely special event peaks.",
+      "'DEMAND' is approximately symmetric (skew=0.207).",
+      "DEMAND on holidays is shifted left (lower) compared to regular days, reflecting reduced industrial and commercial activity."
+    ],
+    "plots": [
+      "kde_all_features",
+      "kde_skew_table",
+      "kde_demand_holiday"
+    ]
+  },
+  "preprocessing": {
+    "description": "Merge train+test, datetime decomposition, column renaming, no-imputation confirmation, and CSV export to datasets_extracted.",
+    "output_file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\datasets_extracted\\ElectricalLoad\\electricalload_preprocessed.csv",
+    "shape": [
+      36888,
+      16
+    ],
+    "columns": [
+      "datetime",
+      "year",
+      "month",
+      "day",
+      "hourOfDay",
+      "dayOfWeek",
+      "weekend",
+      "holiday",
+      "Holiday_ID",
+      "week_X2",
+      "week_X3",
+      "week_X4",
+      "MA_X4",
+      "T2M_toc",
+      "DEMAND",
+      "split"
+    ],
+    "insights": [
+      "Train and test frames merged into a single dataframe (36,888 rows).",
+      "Datetime split into year / month / day for easier groupby operations.",
+      "Column names normalised (hyphens → underscores) for SQL & sklearn compatibility.",
+      "No missing values → no imputation performed.",
+      "Preprocessed CSV saved to: electricalload_preprocessed.csv",
+      "Dataset registered in data.db under category 'Charge électrique'."
+    ],
+    "plots": []
+  },
+  "meta": {
+    "report_id": "28c88ae5fe634657a966b6a64cf402d6",
+    "dataset": "electricalload",
+    "dataset_label": "Electrical Load (Train + Test)",
+    "dataset_name": "electricalload",
+    "generated_at": "2026-11-20T19:21:20.691169+00:00",
+    "n_rows": 36888,
+    "n_cols": 17,
+    "date_column": "datetime",
+    "target_column": "DEMAND",
+    "train_rows": 36720,
+    "test_rows": 168,
+    "date_range_train": {
+      "start": "2015-01-31 01:00:00",
+      "end": "2019-04-10 00:00:00"
+    },
+    "date_range_test": {
+      "start": "2019-04-13 01:00:00",
+      "end": "2019-04-20 00:00:00"
+    },
+    "source_files": [
+      "train_dataframes.xlsx",
+      "test_dataframes.xlsx"
+    ]
+  },
+  "plots": [
+    {
+      "name": "quality_noise_snr",
+      "title": "Noise-to-Signal ratio",
+      "section": "quality",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\quality_noise_snr.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "trend_annual_ma_demand",
+      "title": "Annual MA_X-4 & DEMAND trend",
+      "section": "trends",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\trend_annual_ma_demand.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "trend_monthly_heatmap",
+      "title": "Monthly DEMAND heatmap",
+      "section": "trends",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\trend_monthly_heatmap.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "trend_hourly_profile",
+      "title": "Hourly DEMAND profile",
+      "section": "trends",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\trend_hourly_profile.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_detector_comparison",
+      "title": "Anomaly detector comparison",
+      "section": "outliers",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\outliers_detector_comparison.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_vote_distribution",
+      "title": "Detector vote distribution",
+      "section": "outliers",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\outliers_vote_distribution.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_pca_map",
+      "title": "PCA anomaly map",
+      "section": "outliers",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\outliers_pca_map.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_demand_consensus",
+      "title": "DEMAND vs hour anomalies",
+      "section": "outliers",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\outliers_demand_consensus.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "outliers_per_detector",
+      "title": "Per-detector anomaly scatter",
+      "section": "outliers",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\outliers_per_detector.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_nsr_bars",
+      "title": "Noise-to-Signal ratio bars",
+      "section": "noise",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\noise_nsr_bars.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_residual_demand",
+      "title": "Local residual DEMAND",
+      "section": "noise",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\noise_residual_demand.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_residual_ma_x_4",
+      "title": "Local residual MA_X-4",
+      "section": "noise",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\noise_residual_ma_x_4.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "noise_residual_t2m_toc",
+      "title": "Local residual T2M_toc",
+      "section": "noise",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\noise_residual_t2m_toc.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_heatmaps",
+      "title": "Pearson & Spearman heatmaps",
+      "section": "correlation",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\correlation_heatmaps.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_ma4_demand",
+      "title": "MA_X-4 vs DEMAND scatter",
+      "section": "correlation",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\correlation_ma4_demand.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_demand_holiday_weekend",
+      "title": "DEMAND by holiday & weekend",
+      "section": "correlation",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\correlation_demand_holiday_weekend.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_demand_ma_gap",
+      "title": "DEMAND vs MA_X-4 gap analysis",
+      "section": "correlation",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\correlation_demand_ma_gap.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "correlation_top_gap_days",
+      "title": "Top gap days",
+      "section": "correlation",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\correlation_top_gap_days.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_all_features",
+      "title": "KDE per feature",
+      "section": "distribution",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\kde_all_features.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_skew_table",
+      "title": "Skewness & kurtosis table",
+      "section": "distribution",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\kde_skew_table.png",
+      "mime": "image/png"
+    },
+    {
+      "name": "kde_demand_holiday",
+      "title": "DEMAND KDE holiday vs no-holiday",
+      "section": "distribution",
+      "file": "C:\\Users\\Moham\\Documents\\GitHub\\Sumestre_7_TP\\ML_SUM_7\\Project_ML_Weather\\eda_output_electricalload\\plots\\kde_demand_holiday.png",
+      "mime": "image/png"
+    }
+  ]
+}

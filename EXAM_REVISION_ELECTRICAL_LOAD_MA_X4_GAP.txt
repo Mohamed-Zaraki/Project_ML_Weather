@@ -1,0 +1,86 @@
+================================================================================
+          EXAMINATION REVISION SHEET: ELECTRICAL LOAD DATASET
+     Topic: Interpretation of the Gap between DEMAND and MA_X-4
+================================================================================
+
+1. WHAT IS MA_X-4?
+--------------------------------------------------------------------------------
+- Definition: 
+  MA_X-4 is the 4-week moving average (Moving Average of Lag X-4).
+  It represents the average electrical demand for that EXACT same day of the 
+  week and EXACT same hour over the preceding 4 weeks:
+  
+      MA_X-4 = (week_X-1 + week_X-2 + week_X-3 + week_X-4) / 4
+
+- Analogy:
+  Think of MA_X-4 as the "routine habit" or "expected baseline" of the power grid.
+  DEMAND is what consumers "actually consumed" in real-time.
+
+- Under normal conditions:
+  Human electricity consumption follows strict weekly and hourly cycles.
+  Therefore, MA_X-4 and DEMAND have an extremely high correlation (r > 0.99)
+  and track each other almost identically.
+
+
+2. WHAT DOES A REALLY BIG GAP MEAN?
+--------------------------------------------------------------------------------
+If |DEMAND - MA_X-4| is very large, an EXCEPTIONAL REAL-WORLD EVENT occurred.
+The gap serves as an automatic anomaly detector for the grid.
+
+
+3. THE TWO SCENARIOS WITH REAL EXAMPLES FROM OUR DATASET
+--------------------------------------------------------------------------------
+
+[A] HUGE NEGATIVE GAP: DEMAND << MA_X-4 (Grid Lost Power / Drop in Load)
+------------------------------------------------------------------------
+- Meaning:
+  The electrical grid consumed far less power than expected by the 4-week routine.
+
+- Concrete Example from our Dataset:
+  * Date & Hour: January 20, 2019 at 12:00:00
+  * Expected (MA_X-4): 1,176.2 MW
+  * Actual DEMAND:        85.2 MW
+  * GAP:               -1,091.0 MW  (-93% drop!)
+  * Progression:
+      12:00 ->  85.2 MW
+      13:00 -> 135.8 MW
+      14:00 -> 263.6 MW
+      15:00 -> 417.4 MW
+  * Interpretation:
+    At 12:00, electricity collapsed by over 90%, followed by gradual hourly recovery.
+    This is the textbook signature of a MAJOR REGIONAL BLACKOUT / OUTAGE and
+    step-by-step phased restoration.
+
+- Other Causes:
+  * Public holidays (factories, commercial towers, and schools closed).
+  * Emergency industrial maintenance or nationwide strikes.
+  * Sudden shift to mild weather (no air conditioning needed).
+
+
+[B] HUGE POSITIVE GAP: DEMAND >> MA_X-4 (Unexpected Demand Surge)
+------------------------------------------------------------------------
+- Meaning:
+  The grid consumed significantly more power than the 4-week historical baseline.
+
+- Concrete Example from our Dataset:
+  * Date & Hour: January 22, 2016 at 13:00:00 (also July 25, 2017)
+  * Expected (MA_X-4): ~1,165 MW
+  * Actual DEMAND:     ~1,481 MW
+  * GAP:                  +315 MW (+27% surge!)
+  * Temperature (T2M_toc): Exceeded 30.5 °C
+  * Interpretation:
+    A sudden severe heatwave hit the region. Thousands of air conditioners
+    turned on simultaneously at maximum power, driving an unexpected peak surge.
+
+- Other Causes:
+  * Cold load pickup right after power restoration (appliances pulling surge current).
+  * Major synchronized cultural or national live events (televised finals, festivals).
+
+
+4. QUICK EXAM TALKING POINTS (30-SECOND SUMMARY)
+--------------------------------------------------------------------------------
+1. Baseline: MA_X-4 is the 4-week routine demand for that hour; DEMAND is reality.
+2. Correlation: They normally correlate at r > 0.99.
+3. Negative Spikes: Indicate blackouts, grid trips, or public holidays.
+4. Positive Spikes: Indicate extreme heatwaves (HVAC spikes) or cold load surges.
+================================================================================
