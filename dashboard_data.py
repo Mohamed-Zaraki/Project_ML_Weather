@@ -21,21 +21,32 @@ REPORT_FILES: dict[str, tuple[str, Path]] = {
     "parkinson": ("Maladie de Parkinson", ROOT / "eda_output_parkinson" / "report.json"),
     "alcohol": ("Détection d'alcool", ROOT / "eda_output_alcohol" / "report.json"),
     "heart": ("Crise cardiaque", ROOT / "eda_output_heart" / "report.json"),
+    "electricalload": ("Charge électrique", ROOT / "eda_output_electricalload" / "report.json"),
 }
 
 # Rôle de chaque script (d'après README.md et les docstrings du projet)
 FILE_ROLES: dict[str, tuple[str, str]] = {
     "weather_model.py": ("Model", "Analyse complète de weatherHistory.csv + Random Forest"),
-    "multi_eda_model.py": ("Model", "Pipeline EDA + ML des 4 datasets (COVID, Parkinson, alcool, cœur)"),
+    "multi_eda_model.py": ("Model", "Pipeline EDA + ML des datasets COVID, Parkinson, alcool et cœur"),
+    "electrical_load_eda.py": ("Model", "EDA 7 sections de la charge électrique (qualité, tendances, outliers, bruit, corrélation, distributions, prétraitement)"),
+    "eval_electricalload.py": ("Model", "Évaluation R²/RMSE de 3 régresseurs sur DEMAND + 6 graphiques"),
+    "electrical_load_pipeline.py": ("Pipeline", "Intègre ElectricalLoad dans run_all_models.py (garde-fou aperçus 50 lignes)"),
     "quality.py": ("Model", "Règles de qualité partagées (plages, seuils de bruit, nettoyage)"),
     "quality_multi.py": ("Model", "Indicateurs de qualité Phase I pour les datasets multiples"),
     "data.py": ("Stockage", "Couche SQLite : datasets, rapports, insights, graphiques (BLOB)"),
     "weather_db.py": ("Stockage", "Alias de compatibilité de DataDB (rapports météo)"),
     "populate_datasets.py": ("Stockage", "Import des fichiers de données dans data.db"),
+    "export_dataset_previews.py": ("Stockage", "Recrée les chemins datasets_extracted/ depuis les aperçus 50 lignes de data.db"),
     "export_weather_json.py": ("Stockage", "Export du dernier rapport météo en JSON"),
-    "run_all_models.py": ("Pipeline", "Exécute le pipeline sur les 4 datasets demandés"),
+    "run_all_models.py": ("Pipeline", "Exécute le pipeline EDA + ML sur les 5 datasets du projet"),
     "weather_view.py": ("View", "Vue en lecture seule d'un rapport (un onglet par section)"),
     "dataset_overview.py": ("View", "Vue d'ensemble : import et exploration des datasets"),
+    "column_dictionary.py": ("View", "Dictionnaire métier et interprétation de chaque colonne, par dataset"),
+    "dataset_workplan_view.py": ("View", "Plan de travail interactif propre à chaque dataset"),
+    "outlier_noise_interpretation.py": ("View", "Guide de lecture et synthèse interprétative des outliers et du bruit"),
+    "outlier_view.py": ("View", "Onglet outliers/bruit : KPI, boxplots, détecteurs et bruit par variable"),
+    "electrical_load_view.py": ("View", "Vues charge électrique : outliers/bruit, corrélation et évaluation R²/RMSE"),
+    "workplan_view.py": ("View", "Checklist interactive du plan de travail sur la page d'accueil"),
     "app.py": ("View", "Application Streamlit : navigation et routage"),
     "theme.py": ("View", "Habillage visuel partagé (CSS, cartes KPI)"),
 }
@@ -79,6 +90,112 @@ def target_name(rep: dict) -> str | None:
             or rep.get("model_phase", {}).get("target_balance", {}).get("target_feature"))
 
 
+# ───────────────────── charge électrique (schéma EDA spécifique) ─────────────────────
+# Le rapport eda_output_electricalload/report.json n'utilise pas la section
+# « data_quality » standard des 4 datasets Phase I. On dérive ici les mêmes
+# indicateurs avec la pondération de multi_eda_model.py.
+ELECTRICAL_KEY = "electricalload"
+_VERDICT_ALIASES = {
+    "clean": "negligible", "negligible": "negligible", "négligeable": "negligible",
+    "low": "low", "low noise": "low", "faible": "low",
+    "moderate": "moderate", "moderate noise": "moderate", "modéré": "moderate",
+    "high": "high", "high noise": "high", "élevé": "high",
+}
+
+
+def is_electrical(rep_or_key: dict | str) -> bool:
+    if isinstance(rep_or_key, str):
+        return rep_or_key == ELECTRICAL_KEY
+    meta = rep_or_key.get("meta", {}) or {}
+    return (meta.get("dataset") == ELECTRICAL_KEY
+            or "quality" in rep_or_key and "data_quality" not in rep_or_key
+            and "pearson_ma4_demand" in (rep_or_key.get("correlation") or {}))
+
+
+def _electrical_verdict(raw: str | None) -> str:
+    return _VERDICT_ALIASES.get(str(raw or "").strip().lower(), "negligible")
+
+
+def electrical_quality(rep: dict) -> dict:
+    """Score /100 et indicateurs de la charge électrique, dans le format du dashboard."""
+    q = rep.get("quality", {}) or {}
+    meta = rep.get("meta", {}) or {}
+    n_rows = int(meta.get("n_rows") or 0)
+    n_cols = int(meta.get("n_cols") or 0)
+
+    missing_cells = sum((q.get("missing_train") or {}).values()) + sum((q.get("missing_test") or {}).values())
+    missing_pct = 100 * missing_cells / max(1, n_rows * n_cols)
+    dup_cells = sum((q.get("duplicates") or {}).values())
+    dup_pct = 100 * dup_cells / max(1, n_rows)
+
+    features = (rep.get("noise") or {}).get("features") or []
+    noisy_n = sum(1 for f in features if _electrical_verdict(f.get("verdict")) in ("moderate", "high"))
+    noise_pct = 100 * noisy_n / len(features) if features else 0.0
+
+    o = rep.get("outliers") or {}
+    cons = o.get("consensus_outliers") or {}
+    out_pct = float(cons.get("percent") or 0.0)
+    out_n = int(cons.get("count") or 0)
+
+    # Même pondération que multi_eda_model.BaseDatasetEDAModel.quality()
+    # (contradictions et valeurs hors-plage = 0 pour cette série temporelle).
+    score = round(max(0.0, min(100.0, 100 - (
+        0.30 * missing_pct + 0.10 * dup_pct + 0.15 * noise_pct + 0.15 * out_pct
+    ))), 1)
+    verdict = "good" if score >= 90 else "moderate" if score >= 75 else "poor"
+
+    def status(pct: float, good: float = 1.0, warn: float = 5.0) -> str:
+        return "good" if pct <= good else "warning" if pct <= warn else "critical"
+
+    indicators = [
+        {"indicator": "Completeness", "value": round(100 - missing_pct, 2), "unit": "%",
+         "issue_percent": round(missing_pct, 2), "status": status(missing_pct),
+         "detail": f"{missing_cells} cellules manquantes sur {n_rows * n_cols:,}".replace(",", " ")},
+        {"indicator": "Duplicate rows", "value": round(dup_pct, 2), "unit": "%",
+         "issue_percent": round(dup_pct, 2), "status": status(dup_pct),
+         "detail": f"{dup_cells} lignes dupliquées (train + test)"},
+        {"indicator": "Noisy features", "value": round(noise_pct, 2), "unit": "%",
+         "issue_percent": round(noise_pct, 2), "status": status(noise_pct, 20, 50),
+         "detail": f"{noisy_n}/{len(features)} variables à bruit modéré ou élevé (NSR)"},
+        {"indicator": "Outlier samples", "value": round(out_pct, 2), "unit": "%",
+         "issue_percent": round(out_pct, 2), "status": status(out_pct, 5, 10),
+         "detail": f"{out_n} échantillons signalés par ≥ 2 détecteurs sur 4"},
+    ]
+    return {"score": score, "verdict": verdict, "missing_pct": missing_pct,
+            "dup_pct": dup_pct, "noise_pct": noise_pct, "outlier_pct": out_pct,
+            "indicators": indicators}
+
+
+def outlier_detectors_df(rep: dict) -> pd.DataFrame:
+    """Détecteurs du rapport ElectricalLoad (4 méthodes, contamination 5 %)."""
+    methods = (rep.get("outliers") or {}).get("methods") or {}
+    rows = [{"detecteur": name,
+             "n": int(v.get("outlier_count") or 0),
+             "pourcent": float(v.get("outlier_percent") or 0.0)}
+            for name, v in methods.items()]
+    return pd.DataFrame(rows).sort_values("pourcent", ascending=False).reset_index(drop=True)
+
+
+def electrical_gap_days_df(rep: dict, top: int = 15) -> pd.DataFrame:
+    """Jours où |DEMAND − MA_X-4| dépasse le seuil, du plus grand écart au plus petit."""
+    corr = rep.get("correlation") or {}
+    threshold = float(corr.get("gap_threshold_mw") or 0.0)
+    rows = []
+    for g in corr.get("big_gap_days") or []:
+        try:
+            date = f"{int(g['year']):04d}-{int(g['month']):02d}-{int(g['day']):02d}"
+        except (KeyError, TypeError, ValueError):
+            date = str(g)
+        rows.append({"date": date, "gap": float(g.get("gap") or 0.0), "seuil": threshold})
+    return pd.DataFrame(rows).sort_values("gap", ascending=False).head(top).reset_index(drop=True)
+
+
+def electrical_trends_df(rep: dict) -> pd.DataFrame:
+    """Moyennes annuelles MA_X-4 / DEMAND du rapport ElectricalLoad."""
+    rows = (rep.get("trends") or {}).get("annual") or []
+    return pd.DataFrame(rows).rename(columns={"year": "annee"})
+
+
 # ───────────────────────── tableaux de synthèse ─────────────────────────
 def overview_table(reports: dict[str, dict]) -> pd.DataFrame:
     rows = []
@@ -87,6 +204,25 @@ def overview_table(reports: dict[str, dict]) -> pd.DataFrame:
         dq = rep.get("data_quality", {})
         dash = dq.get("dashboard", {})
         noise = rep.get("noise", {})
+        if is_electrical(rep):  # rapport EDA spécifique (pas de section data_quality)
+            eq = electrical_quality(rep)
+            rows.append({
+                "key": key,
+                "Dataset": label(key),
+                "Lignes": meta.get("n_rows"),
+                "Colonnes": meta.get("n_cols"),
+                "Cible": target_name(rep),
+                "Score qualité": eq["score"],
+                "Verdict": eq["verdict"],
+                "Doublons %": round(eq["dup_pct"], 2),
+                "Contradictions %": 0.0,
+                "Bruit %": round(eq["noise_pct"], 2),
+                "Outliers %": round(eq["outlier_pct"], 2),
+                "Graphiques": len(rep.get("plots", []) or []),
+                "Insights": n_insights(rep),
+                "Généré le": (meta.get("generated_at") or "")[:16].replace("T", " "),
+            })
+            continue
         if dash:  # datasets multiples
             noise_pct = dash.get("noise_percent")
             outl_pct = dash.get("outliers_percent")
@@ -141,17 +277,25 @@ def model_table(reports: dict[str, dict]) -> pd.DataFrame:
 
 # ───────────────────────── détail d'un dataset ─────────────────────────
 def indicators_df(rep: dict) -> pd.DataFrame:
+    if is_electrical(rep):
+        return pd.DataFrame(electrical_quality(rep)["indicators"])
     return pd.DataFrame(rep.get("data_quality", {}).get("indicators", []) or [])
 
 
 def noise_df(rep: dict) -> pd.DataFrame:
-    rows = [{
-        "feature": f.get("feature"),
-        "noise_to_signal": f.get("noise_to_signal"),
-        "snr_db": f.get("snr_db"),
-        "verdict": f.get("verdict"),
-        "spikes %": f.get("spike_percent", f.get("spikes_percent")),
-    } for f in rep.get("noise", {}).get("features", []) or []]
+    rows = []
+    for f in rep.get("noise", {}).get("features", []) or []:
+        rows.append({
+            "feature": f.get("feature"),
+            "noise_to_signal": f.get("noise_to_signal", f.get("nsr")),
+            "snr_db": f.get("snr_db"),
+            # Les verdicts ElectricalLoad ("clean", "low noise") sont alignés
+            # sur le domaine des couleurs Altair (negligible/low/moderate/high).
+            "verdict": _electrical_verdict(f.get("verdict")),
+            "noise_sigma": f.get("noise_sigma", f.get("noise_std")),
+            "signal_sigma": f.get("signal_sigma", f.get("signal_std")),
+            "spikes %": f.get("spike_percent", f.get("spikes_percent")),
+        })
     return pd.DataFrame(rows)
 
 
@@ -189,6 +333,13 @@ def confusion_df(rep: dict) -> pd.DataFrame:
 
 def corr_pairs_df(rep: dict, top: int = 8) -> pd.DataFrame:
     corr = rep.get("correlation", {})
+    if is_electrical(rep) and corr.get("pearson_ma4_demand") is not None:
+        r = float(corr["pearson_ma4_demand"])
+        return pd.DataFrame([{
+            "a": "MA_X-4", "b": "DEMAND", "paire": "MA_X-4  ×  DEMAND",
+            "pearson": r, "spearman": r,
+            "strength": "très forte" if abs(r) >= 0.8 else "forte" if abs(r) >= 0.6 else "modérée",
+        }])
     pairs = corr.get("top_pairs") or corr.get("pairs") or []
     df = pd.DataFrame(pairs)
     if df.empty:
@@ -274,17 +425,71 @@ def plots_for(rep: dict, root: Path = ROOT) -> list[dict]:
     """Graphiques du rapport avec chemin résolu (les JSON contiennent des chemins Windows)."""
     out = []
     for p in rep.get("plots", []) or []:
-        raw = (p.get("file") or "").replace("\\", "/")
-        path = root / raw if raw else None
-        if path is not None and not path.exists():
-            path = None
-        out.append({"title": p.get("title") or p.get("name"), "section": p.get("section") or "autre", "path": path})
-    return [p for p in out if p["path"] is not None]
+        if isinstance(p, str):
+            name = p
+            title = name
+            section = "distribution"
+            raw = ""
+        else:
+            name = p.get("name")
+            title = p.get("title") or name
+            section = p.get("section") or "distribution"
+            raw = p.get("file") or ""
+        # Les rapports ElectricalLoad stockent des chemins absolus d'une autre machine.
+        candidates = []
+        if raw:
+            r = raw.replace("\\", "/")
+            candidates.append(Path(r) if Path(r).is_absolute() else root / r)
+        if is_electrical(rep) and name:
+            candidates.append(root / "eda_output_electricalload" / "plots" / f"{name}.png")
+        path = next((c for c in candidates if c.exists()), None)
+        if path is None:
+            continue
+        out.append({"title": title, "section": section, "path": path})
+    return out
 
 
 # ───────────────────────── outliers, bruit, interprétation ─────────────────────────
-# clé du rapport -> id de la table principale dans data.db (table `datasets`)
-DB_DATASET_IDS = {"weather": 68, "covid": 3, "parkinson": 43, "alcohol": 1, "heart": 32}
+# clé du rapport -> id historique de la table principale dans data.db
+# Les lignes peuvent changer après une ré-ingestion: utiliser resolve_dataset_id()
+# pour retrouver le fichier correspondant dynamiquement.
+DB_DATASET_IDS = {"weather": 134, "covid": 72, "parkinson": 109, "alcohol": 70, "heart": 96, "electricalload": 135}
+
+
+def resolve_dataset_id(db_path: Path, key: str, rep: dict) -> int | None:
+    """Resolve the catalogue row for a report, regardless of SQLite row renumbering."""
+    csv_path = str((rep.get("meta") or {}).get("csv_path") or "")
+    basename = Path(csv_path.replace("\\", "/")).name.lower()
+    normalized = csv_path.replace("\\", "/").strip("/").lower()
+
+    try:
+        with sqlite3.connect(db_path) as con:
+            rows = con.execute(
+                "SELECT id, filename, file_path FROM datasets"
+            ).fetchall()
+    except sqlite3.Error:
+        return DB_DATASET_IDS.get(key)
+
+    if basename:
+        exact_path = [
+            r[0] for r in rows
+            if str(r[2]).replace("\\", "/").strip("/").lower() == normalized
+        ]
+        if exact_path:
+            return exact_path[0]
+
+        exact_name = [r[0] for r in rows if str(r[1]).lower() == basename]
+        if len(exact_name) == 1:
+            return exact_name[0]
+
+    fallback = DB_DATASET_IDS.get(key)
+    if fallback is not None:
+        with sqlite3.connect(db_path) as con:
+            if con.execute(
+                "SELECT 1 FROM datasets WHERE id = ?", (fallback,)
+            ).fetchone():
+                return fallback
+    return None
 
 
 def outlier_features(rep: dict) -> list[dict]:
@@ -360,8 +565,164 @@ def interpret_variables(rep: dict) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values("Outliers IQR %", ascending=False).reset_index(drop=True)
 
 
+def electrical_noise_interpretation_df(rep: dict) -> pd.DataFrame:
+    """Table de lecture du bruit ElectricalLoad (NSR/SNR) quand l'outlier est multivarié."""
+    rows = []
+    for r in noise_df(rep).to_dict("records"):
+        nsr = r.get("noise_to_signal")
+        snr = r.get("snr_db")
+        verdict = str(r.get("verdict") or "—").lower()
+        if verdict == "negligible":
+            interp = "Signal très propre : les écarts locaux sont négligeables."
+            action = "Conserver sans lissage."
+        elif verdict == "low":
+            interp = "Bruit faible : la variation observée est surtout du signal utile."
+            action = "Conserver ; le lissage n'apporterait rien."
+        elif verdict == "moderate":
+            interp = "Bruit modéré : une part notable des micro-variations est aléatoire."
+            action = "Tester une agrégation horaire ou un lissage léger."
+        elif verdict == "high":
+            interp = "Bruit élevé : les micro-variations dominent le signal."
+            action = "Lisser / agréger avant modélisation et vérifier le capteur."
+        else:
+            interp = "Verdict de bruit indisponible."
+            action = "Vérifier le rapport EDA."
+        if pd.notna(nsr) and pd.notna(snr):
+            interp += f" NSR {nsr:.3f} · SNR {snr:.1f} dB."
+        elif pd.notna(nsr):
+            interp += f" NSR {nsr:.3f}."
+        rows.append({
+            "Variable": r.get("feature"),
+            "NSR": nsr,
+            "SNR (dB)": snr,
+            "Verdict": r.get("verdict") or "—",
+            "Interprétation": interp,
+            "Action": action,
+        })
+    return pd.DataFrame(rows)
+
+
+def outlier_noise_interpretation(rep: dict) -> dict:
+    """Synthèse prête à afficher : chiffres clés, faits et décisions pour outliers + bruit."""
+    nz = noise_df(rep)
+    bad = nz[nz["verdict"].isin(["moderate", "high"])] if not nz.empty else nz
+    worst = nz.sort_values("noise_to_signal", ascending=False).iloc[0] if (
+        not nz.empty and nz["noise_to_signal"].notna().any()) else None
+
+    if is_electrical(rep):
+        o = rep.get("outliers") or {}
+        cons = o.get("consensus_outliers") or {}
+        unanimous = (o.get("unanimous_outliers") or {}).get("count", 0)
+        det = outlier_detectors_df(rep)
+        cons_pct = cons.get("percent")
+        headline = (
+            f"{len(det)} détecteurs multivariés · consensus "
+            f"{'n/a' if cons_pct is None else f'{cons_pct:.2f} %'} "
+            f"· {len(bad)} variable(s) sur {len(nz)} en bruit modéré/élevé"
+        )
+        facts = []
+        if cons_pct is not None:
+            facts.append(
+                f"Le consensus (≥ 2 détecteurs) retient {cons.get('count', 0)} lignes, soit {cons_pct:.2f} %. "
+                f"Ce niveau correspond à la contamination de 5 % paramétrée dans les détecteurs : "
+                f"il s'agit de comportements suspects, pas nécessairement d'erreurs de mesure."
+            )
+        if unanimous:
+            facts.append(
+                f"{unanimous} lignes sont signalées par les 4 détecteurs : ce sont les anomalies les plus sûres "
+                "(pointes de charge, jours fériés, arrêts ou événements spéciaux)."
+            )
+        if worst is not None and pd.notna(worst.get("noise_to_signal")):
+            snr_txt = (f" et SNR {worst['snr_db']:.1f} dB" if pd.notna(worst.get("snr_db")) else "")
+            facts.append(
+                f"Le bruit reste globalement faible : NSR maximal {worst['noise_to_signal']:.3f} "
+                f"pour {worst['feature']}{snr_txt}. Les variables lissées (week_X-*, MA_X-4) ont un NSR "
+                "plus bas par construction, pas une meilleure qualité de capteur."
+            )
+        decisions = [
+            "Ne pas supprimer aveuglément les lignes de consensus : les conserver comme indicateur d'événement "
+            "ou les expliquer via `holiday`, `weekend` et `Holiday_ID`.",
+            "Garder les retards `week_X-*` et `MA_X-4`, mais vérifier qu'ils sont calculés uniquement sur le passé "
+            "avant entraînement (risque de fuite temporelle).",
+            "Aucun lissage nécessaire sur `DEMAND` et `T2M_toc` : le bruit estimé est faible et les résidus aux "
+            "pics reflètent la volatilité réelle du réseau.",
+        ]
+        return {"headline": headline, "facts": facts, "decisions": decisions}
+
+    feats = outlier_features(rep)
+    s = (rep.get("outliers") or {}).get("summary") or {}
+    mean_iqr = s.get("mean_iqr_percent")
+    if mean_iqr is None and feats:
+        mean_iqr = sum(f.get("iqr_percent") or 0 for f in feats) / len(feats)
+    top = max(feats, key=lambda f: f.get("iqr_percent") or 0) if feats else None
+    cons_pct = s.get("consensus_percent")
+    headline = (
+        f"{len(feats)} variable(s) analysée(s) · IQR moyen "
+        f"{'n/a' if mean_iqr is None else f'{mean_iqr:.2f} %'} · "
+        f"consensus {'n/a' if cons_pct is None else f'{cons_pct:.2f} %'} · "
+        f"{len(bad)} variable(s) sur {len(nz)} en bruit modéré/élevé"
+    )
+    facts = []
+    if top is not None:
+        p = top.get("iqr_percent") or 0
+        z = top.get("z_percent") or 0
+        facts.append(
+            f"{top['feature']} est la variable la plus touchée : {p:.2f} % hors barrières IQR "
+            f"({top.get('iqr_outliers', 0)} valeurs) contre {z:.2f} % en Z-score. "
+            + ("L'écart IQR ≫ Z indique une queue lourde : ces extrêmes sont souvent réels."
+               if p >= 2 * max(z, 0.01) and p >= 1 else
+               "Les deux méthodes convergent : les extrêmes sont confirmés.")
+            + (" Attention : dans ce jeu, `Pressure = 0` code un capteur non renseigné, pas une vraie mesure."
+               if "pressure" in str(top.get("feature", "")).lower() else "")
+        )
+    if cons_pct is not None:
+        facts.append(
+            f"La détection multivariée signale {s.get('consensus_count', '?')} lignes ({cons_pct:.2f} %) "
+            f"par au moins 2 des 6 détecteurs, dont {s.get('unanimous_count', 0)} à l'unanimité."
+        )
+    if worst is not None and pd.notna(worst.get("noise_to_signal")):
+        snr_txt = (f" et SNR {worst['snr_db']:.1f} dB" if pd.notna(worst.get("snr_db")) else "")
+        facts.append(
+            f"La variable la plus bruitée est {worst['feature']} "
+            f"(bruit/signal {worst['noise_to_signal']:.2f}{snr_txt})."
+        )
+    decisions = []
+    if top is not None and (top.get("iqr_percent") or 0) >= 5 and (top.get("z_percent") or 0) < (top.get("iqr_percent") or 0) / 2:
+        decisions.append("Conserver les extrêmes de « queue lourde » et utiliser une échelle robuste ou une transformation log.")
+    else:
+        decisions.append("Aucune suppression automatique : vérifier la source des valeurs extrêmes avant décision.")
+    if bad.empty:
+        decisions.append("Le bruit est négligeable ou faible sur toutes les variables : pas de lissage nécessaire.")
+    else:
+        decisions.append("Pour les variables en bruit modéré/élevé, tester l'agrégation ou le lissage, puis comparer les métriques du modèle.")
+    if cons_pct is not None and cons_pct >= 5:
+        decisions.append("Analyser les lignes de consensus avant nettoyage : elles peuvent être des cas rares mais légitimes.")
+    return {"headline": headline, "facts": facts, "decisions": decisions}
+
+
 def outlier_noise_points(rep: dict) -> list[tuple[str, str, str]]:
     """Points d'interprétation globaux (ton, titre, détail) pour la page Outliers & bruit."""
+    if is_electrical(rep):
+        o = rep.get("outliers") or {}
+        cons = o.get("consensus_outliers") or {}
+        unanimous = (o.get("unanimous_outliers") or {}).get("count", 0)
+        det = outlier_detectors_df(rep)
+        pts = []
+        if cons.get("percent") is not None:
+            pts.append(("warn" if cons["percent"] >= 5 else "info",
+                        f"{cons['percent']:.2f} % d'outliers par consensus ({cons.get('count', 0)} lignes)",
+                        f"Signalées par au moins 2 des {len(det)} détecteurs ; {unanimous} lignes sont "
+                        "signalées par les 4. Ce sont les pointes de charge du réseau : ne pas les supprimer aveuglément."))
+        nz = noise_df(rep).dropna(subset=["noise_to_signal"])
+        if not nz.empty:
+            bad = nz[nz["verdict"].isin(["moderate", "high"])]
+            worst = nz.sort_values("noise_to_signal", ascending=False).iloc[0]
+            pts.append(("good" if bad.empty else "warn",
+                        f"Bruit : {len(bad)} variable(s) sur {len(nz)} en bruit modéré ou élevé",
+                        f"NSR maximal {worst['noise_to_signal']:.3f} pour {worst['feature']} "
+                        f"(SNR {worst['snr_db']:.1f} dB) : la série horaire est globalement propre."))
+        return pts
+
     pts = []
     feats = outlier_features(rep)
     if feats:
@@ -451,6 +812,19 @@ def attention_points(reports: dict[str, dict]) -> list[tuple[str, str, str]]:
         if key == "weather" and not rep.get("model_phase", {}).get("evaluation"):
             pts.append(("info", "Météo : évaluation du modèle absente du rapport enregistré",
                         "weather_model.py sait la calculer ; relancer python weather_db.py weatherHistory.csv data.db."))
+        if is_electrical(rep):
+            corr = rep.get("correlation") or {}
+            gaps = electrical_gap_days_df(rep, 1)
+            if corr.get("pearson_ma4_demand") is not None:
+                pts.append(("info",
+                            f"Charge électrique : MA_X-4 corrélée à DEMAND (r = {corr['pearson_ma4_demand']:.4f})",
+                            "Prédicteur puissant mais sensible aux fuites temporelles ; le split train/test "
+                            "doit rester chronologique (2015-2019 → avril 2019)."))
+            if not gaps.empty:
+                pts.append(("warn",
+                            f"Charge électrique : écart de {gaps.iloc[0]['gap']:.0f} MW le {gaps.iloc[0]['date']}",
+                            f"Au-dessus du seuil de {gaps.iloc[0]['seuil']:.0f} MW : pic de demande réel "
+                            "(jour férié, météo ou arrêt de production) à conserver comme signal."))
     for key, rep in reports.items():
         imp = importance_df(rep, top=2)
         if len(imp) == 2 and imp.loc[1, "value"] > 0 and imp.loc[0, "value"] / imp.loc[1, "value"] >= 5 \
@@ -491,7 +865,19 @@ def timeline(reports: dict[str, dict], db: dict | None) -> list[dict]:
                       "detail": ", ".join(label(k) for k in multi)
                                 + " : qualité Phase I, bruit, outliers (6 détecteurs), contradictions, corrélations, modèle "
                                   "(run_all_models.py)."})
+    e = reports.get(ELECTRICAL_KEY)
+    if e:
+        eq = electrical_quality(e)
+        r_ma = (e.get("correlation") or {}).get("pearson_ma4_demand", "n/a")
+        steps.append({"date": (e["meta"].get("generated_at") or "")[:10],
+                      "title": "Charge électrique : EDA temporelle + régression",
+                      "detail": f"{e['meta'].get('n_rows'):,} relevés horaires".replace(",", " ")
+                                + f", score qualité {eq['score']}/100, 4 détecteurs d'anomalies, "
+                                  f"r MA_X-4/DEMAND = {r_ma} "
+                                  "(electrical_load_eda.py + eval_electricalload.py)."})
     steps.append({"date": "", "title": "Application Streamlit en architecture MVC",
-                  "detail": "Model (weather_model.py, multi_eda_model.py) · stockage (data.py) · "
-                            "vues (app.py, weather_view.py, dataset_overview.py, theme.py)."})
+                  "detail": "Model (weather_model.py, multi_eda_model.py, electrical_load_eda.py) · "
+                            "stockage (data.py, export_dataset_previews.py) · "
+                            "vues (app.py, project_dashboard.py, electrical_load_view.py, workplan_view.py, "
+                             "dataset_workplan_view.py, column_dictionary.py, outlier_noise_interpretation.py)."})
     return steps
