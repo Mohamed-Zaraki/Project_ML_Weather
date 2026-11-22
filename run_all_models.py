@@ -1,13 +1,17 @@
-"""run_all_models.py - Execute the 8-section EDA + ML pipeline on the four
-requested datasets: COVID-19, Parkinson, Alcohol and Heart Attack.
+"""run_all_models.py - Execute the EDA + ML pipeline on the five project datasets:
+COVID-19, Parkinson, Alcohol, Heart Attack and Electrical Load.
 
 Each dataset produces ``eda_output_<name>/report.json`` plus one PNG per plot.
-The front-end is not touched: this script only builds the logic/report artefacts.
+ElectricalLoad uses its own EDA schema and regression metrics (R²/RMSE) via
+``electrical_load_pipeline.py``; the runner prints them alongside the four
+classification datasets. The front-end is not touched: this script only builds
+the logic/report artefacts.
 
 Usage
 -----
     py -3 run_all_models.py
     py -3 run_all_models.py covid parkinson      # subset
+    py -3 run_all_models.py electricalload       # charge électrique seule
 """
 from __future__ import annotations
 
@@ -15,6 +19,7 @@ import sys
 import time
 import traceback
 
+from electrical_load_pipeline import ElectricalLoadEDAModel
 from multi_eda_model import (
     AlcoholEDAModel, CovidEDAModel, HeartAttackEDAModel, HeartEDAModel,
     ParkinsonEDAModel,
@@ -26,10 +31,11 @@ MODELS = {
     "heartattack": ("Heart Attack (UCI)", HeartAttackEDAModel),
     "parkinson": ("Parkinson's Disease", ParkinsonEDAModel),
     "covid": ("COVID-19 Laboratory", CovidEDAModel),
+    "electricalload": ("Electrical Load (DEMAND)", ElectricalLoadEDAModel),
 }
 
-# Default run: the four datasets requested by the assignment.
-DEFAULT = ["covid", "parkinson", "alcohol", "heart"]
+# Default run: the five datasets of the project (4 classifications + 1 regression).
+DEFAULT = ["covid", "parkinson", "alcohol", "heart", "electricalload"]
 
 
 def _fmt(value):
@@ -56,6 +62,25 @@ def main(argv: list[str]):
             report = model.run()
             saved = model.save()
             duration = round(time.time() - t0, 2)
+
+            # ElectricalLoad : rapport EDA spécifique + régression R²/RMSE.
+            if getattr(model, "is_regression", False):
+                db_id = getattr(model, "db_report_id", None)
+                print(f"     [OK] {duration}s | {len(model.plots)} plots | report: {saved}")
+                print(f"     Database   : data.db | report_id={db_id or 'not stored'}")
+                for line in model.summary_lines():
+                    print(line)
+                best = (model.metrics.loc[model.metrics["R2 Test"].idxmax()]
+                        if not model.metrics.empty else None)
+                results.append({
+                    "dataset": label, "status": "SUCCESS", "duration": duration,
+                    "plots": len(model.plots), "report_file": saved,
+                    "rows": (report.get("meta") or {}).get("n_rows"),
+                    "r2_test": float(best["R2 Test"]) if best is not None else None,
+                    "rmse_test": float(best["RMSE Test"]) if best is not None else None,
+                    "best_model": str(best["Algorithme"]) if best is not None else "n/a",
+                })
+                continue
 
             ev = report["model_phase"].get("evaluation", {})
             cr = report["contradictions"]["summary"]
@@ -97,9 +122,14 @@ def main(argv: list[str]):
     print("=" * 78)
     for r in results:
         if r["status"] == "SUCCESS":
-            print(f" - {r['dataset']}: OK | {r['plots']} plots | {r['rows']} rows | "
-                  f"contradictions={r['contradictory_rows']} | "
-                  f"bal_acc={_fmt(r['balanced_accuracy'])} | macro_F1={_fmt(r['f1_macro'])}")
+            if r.get("r2_test") is not None:
+                print(f" - {r['dataset']}: OK | {r['plots']} plots | {r['rows']} rows | "
+                      f"{r['best_model']} | R² test={_fmt(r['r2_test'])} | "
+                      f"RMSE test={_fmt(r['rmse_test'])} MW")
+            else:
+                print(f" - {r['dataset']}: OK | {r['plots']} plots | {r['rows']} rows | "
+                      f"contradictions={r['contradictory_rows']} | "
+                      f"bal_acc={_fmt(r['balanced_accuracy'])} | macro_F1={_fmt(r['f1_macro'])}")
         else:
             print(f" - {r['dataset']}: FAILED | {r['error']}")
     print("=" * 78)

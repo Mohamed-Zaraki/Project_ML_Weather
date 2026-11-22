@@ -8,6 +8,8 @@ Lancer (depuis la racine du projet) :
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -16,11 +18,19 @@ st.set_page_config(page_title="Data Description & Quality · ML Dashboard", page
 
 import dashboard_data as dd  # noqa: E402
 import dashboard_charts as ch  # noqa: E402
+from column_dictionary import render_column_dictionary  # noqa: E402
 from dataset_cards import render_dataset_cards  # noqa: E402
 from dataset_overview import render_dataset_detail  # noqa: E402
+from dataset_workplan_view import render_dataset_workplan  # noqa: E402
+from electrical_load_view import (  # noqa: E402
+    render_electrical_correlation,
+    render_electrical_evaluation,
+    render_electrical_outliers_noise,
+)
 from outlier_view import render_boxplot, render_outliers_noise  # noqa: E402
 from regression_view import render_regression_lab  # noqa: E402
 from theme import apply_theme, attention_list, brand, hero, kpi_row, section_title  # noqa: E402
+from workplan_view import render_workplan  # noqa: E402
 
 apply_theme()
 st.markdown(
@@ -123,6 +133,26 @@ PROBLEMS_DATA = {
         "impact": "Ces zéros cachés faussent les calculs statistiques et dégradent la calibration des probabilités de risque vital.",
         "solution": "Détection automatique des zéros aberrants masqués comme valeurs manquantes, imputation ciblée et évaluation ROC-AUC.",
     },
+    "electricalload": {
+        "title": "Prévision de la Charge Électrique (DEMAND)",
+        "tag": "Énergie · 36 888 relevés horaires",
+        "icon": "⚡",
+        "accent": "#0891B2",
+        "problem": (
+            "Prédire la demande électrique horaire (MW) de 2015 à 2019 à partir de 17 variables : retards hebdomadaires "
+            "(week_X-2/3/4), moyenne mobile MA_X-4, température T2M_toc et calendrier (jour férié, week-end). "
+            "Le défi est double : les pics de consommation sont de vrais événements (et non des erreurs à supprimer), "
+            "et l'écart |DEMAND − MA_X-4| dépasse 202 MW lors de journées exceptionnelles."
+        ),
+        "impact": (
+            "Supprimer ces extrêmes effacerait les épisodes de pointe que le réseau doit justement anticiper. "
+            "À l'inverse, utiliser MA_X-4 sans respecter l'ordre chronologique fuirait la cible : r = 0,92 avec DEMAND."
+        ),
+        "solution": (
+            "Consensus de 4 détecteurs d'anomalies (5 % de contamination), analyse du bruit NSR/SNR sur la série temporelle, "
+            "séparation train/test par date puis comparaison R²/RMSE de trois régresseurs."
+        ),
+    },
 }
 
 
@@ -157,7 +187,10 @@ SEC_FR = {
     "noise": "Bruit",
     "correlation": "Corrélations",
     "kde": "Distributions",
+    "distribution": "Distributions",
+    "quality": "Qualité ElectricalLoad",
     "monthly_trends": "Tendances mensuelles",
+    "trends": "Tendances ElectricalLoad",
     "model_phase": "Modèle",
     "interpretation": "Interprétation",
 }
@@ -349,7 +382,7 @@ total_rows = int(ov["Lignes"].sum())
 if sel is None:
     hero(
         "Projet Machine Learning & Qualité des Données",
-        "Analyse Météo & Datasets Médicaux Multi-Domaines",
+        "Analyse Météo · Santé · Charge Électrique",
         [
             ("Datasets audités", str(len(reports))),
             ("Observations totales", f"{total_rows:,}".replace(",", " ")),
@@ -452,8 +485,9 @@ if 0 in tabs:
     with tabs[0]:
         scored = ov.dropna(subset=["Score qualité"])
         kpis = [
-            ("Jeux avec rapport", len(reports), "Météo + 4 datasets de santé", "info"),
-            ("Qualité moyenne", f"{scored['Score qualité'].mean():.1f}/100", "4 datasets scorés (Phase I)", "good"),
+            ("Jeux avec rapport", len(reports), "Météo + santé + charge électrique", "info"),
+            ("Qualité moyenne", f"{scored['Score qualité'].mean():.1f}/100",
+             f"{len(scored)} datasets scorés", "good"),
         ]
         if not mt.empty:
             kpis.append(("Balanced accuracy moy.", f"{mt['Balanced accuracy'].mean():.3f}",
@@ -461,6 +495,9 @@ if 0 in tabs:
         if db:
             kpis.append(("Tables en base", db["counts"]["datasets"], f"{db['n_categories']} catégories · data.db {db['size_mb']} Mo"))
         kpi_row(kpis)
+
+        section_title("Plan de travail", "Cochez les étapes réalisées pour suivre l'avancement du projet")
+        render_workplan(reports, db)
 
         section_title("Points d'attention prioritaires", "Anomalies et constats majeurs calculés à partir des rapports")
         attention_list(dd.attention_points(reports))
@@ -502,13 +539,16 @@ if 0 in tabs:
                 color=alt.Color("Indicateur:N", scale=alt.Scale(range=[BAD, WARN, INFO, TEAL_2]),
                                 legend=alt.Legend(orient="bottom")),
                 tooltip=["Dataset", "Indicateur", alt.Tooltip("Valeur:Q", format=".2f")]), 300)
-        st.caption("Note : la météo n'a pas de section « data_quality » Phase I standardisée : bruit = part des variables testées jugées bruitées, "
-                   "doublons issus de la section manquants/doublons.")
+        st.caption("Note : la météo et la charge électrique n'ont pas de section « data_quality » Phase I standardisée. "
+                   "Le score de la charge électrique est dérivé de son rapport EDA (complétude, doublons, bruit modéré/élevé, outliers consensus).")
+        st.caption("Les jeux bruts sont ignorés par Git : leurs aperçus (50 lignes) sont exportés dans `data/previews/` "
+                   "avec un `manifest.csv`, et les chemins `datasets_extracted/` sont recréés (marqueur `_APERCU_ONLY.txt`). "
+                   "65 datasets, 358 889 lignes cataloguées dans `data.db`.")
 
 # ═════════════════════════ NOUVEAU ONGLET : PROBLÉMATIQUE & DÉFIS ═════════════════════════
 if 5 in tabs:
     with tabs[5]:
-        section_title("Les 5 Problématiques Métier & Défis Techniques", "Comprendre les pièges réels de chaque domaine")
+        section_title("Les 6 Problématiques Métier & Défis Techniques", "Comprendre les pièges réels de chaque domaine")
         st.markdown(
             """
             Chaque dataset représente un cas d'étude concret où un modèle de Machine Learning naïf
@@ -541,6 +581,7 @@ if 5 in tabs:
             {"Domaine": "🧠 Maladie de Parkinson", "Taille": "584 patients", "Anomalie Critique": "Déséquilibre de classe fort", "Risque": "Accuracy trompeuse", "Traitement": "Balanced Accuracy & K-Fold stratifié"},
             {"Domaine": "🍺 Détection d'Alcoolémie", "Taille": "390 observations", "Anomalie Critique": "Contradictions logiques (classe 0, alcool > 0)", "Risque": "Frontière de décision corrompue", "Traitement": "Audit des contradictions & filtre bruit"},
             {"Domaine": "❤️ Crise Cardiaque", "Taille": "1 190 patients", "Anomalie Critique": "Cholestérol = 0 (zéros masqués)", "Risque": "Valeur biologique absurde", "Traitement": "Imputation ciblée & ROC-AUC"},
+            {"Domaine": "⚡ Charge Électrique", "Taille": "36 888 relevés", "Anomalie Critique": "Pics de demande & gap MA_X-4 > 202 MW", "Risque": "Fuite temporelle / perte des pointes", "Traitement": "Consensus 4 détecteurs & split daté, R²/RMSE"},
         ])
         stretch(st.dataframe, summary_df, hide_index=True)
 
@@ -599,12 +640,15 @@ if 1 in tabs:
                     tooltip=["paire", alt.Tooltip("pearson:Q", format=".3f"), alt.Tooltip("spearman:Q", format=".3f"), "strength"]),
                     max(200, 30 * len(cp)))
 
-        plots_carousel(["data_quality", "missing_duplicates", "contradictions"])
+        plots_carousel(["data_quality", "missing_duplicates", "contradictions", "quality"])
 
 # ═════════════════════════ 3. MODÈLES ═════════════════════════
 if 2 in tabs:
     with tabs[2]:
         section_title("Comparatif des performances Machine Learning", "Random Forest pondéré · Évaluation test hold-out + validation croisée")
+        if "electricalload" in reports:
+            st.info("La charge électrique est un problème de régression : ses scores R²/RMSE sont présentés "
+                    "dans l'onglet « 🧪 Éval. Modèles » du dataset Charge électrique.")
         if mt.empty:
             st.info("Aucune évaluation de modèle trouvée dans les rapports.")
         else:
@@ -621,7 +665,9 @@ if 2 in tabs:
 # ═════════════════════════ 3c. ÉVALUATION DES MODÈLES (Phase II) ═════════════════════════
 if 11 in tabs:
     with tabs[11]:
-        if rep.get("regression_lab"):          # météo : régressions (Température / Pression seules)
+        if sel == "electricalload":
+            render_electrical_evaluation(rep, sel)
+        elif rep.get("regression_lab"):        # météo : régressions (Température / Pression seules)
             render_regression_lab(rep, sel)
         else:
             model_lab_panel(rep, sel)
@@ -633,7 +679,23 @@ if 3 in tabs:
     with tabs[3]:
         st.subheader(dd.label(sel))
         plan = dd.plan_df(rep)
-        if plan.empty:
+        if sel == "electricalload":
+            pre = rep.get("preprocessing", {}) or {}
+            shape = pre.get("shape") or []
+            kpi_row([
+                ("Dataset prétraité", f"{shape[0]:,} × {shape[1]}".replace(",", " ")
+                 if len(shape) == 2 else "—", "lignes × colonnes"),
+                ("Colonnes conservées", len(pre.get("columns", []) or []), "après normalisation des noms"),
+                ("Valeurs manquantes", 0, "aucune imputation nécessaire", "good"),
+                ("Fichier exporté", Path(pre.get("output_file", "")).name or "—",
+                 "dans data.db, catégorie « Charge électrique »", "info"),
+            ])
+            section_title("Étapes appliquées", pre.get("description", ""))
+            st.markdown("\n".join(f"- {t}" for t in (pre.get("insights") or [])))
+            if pre.get("columns"):
+                with st.expander("Colonnes du fichier prétraité"):
+                    st.code(", ".join(pre["columns"]), language="text")
+        elif plan.empty:
             st.info("Ce rapport n'a pas de section d'interprétation explicite.")
             pre = rep.get("model_phase", {}).get("preprocessing")
             if pre:
@@ -700,21 +762,35 @@ if 4 in tabs:
 # ═════════════════════════ 0b. DONNÉES ═════════════════════════
 if 7 in tabs:
     with tabs[7]:
-        render_dataset_detail(dd.ROOT / "data.db", dd.DB_DATASET_IDS[sel], key_prefix=f"ds_{sel}")
+        dataset_id = dd.resolve_dataset_id(dd.ROOT / "data.db", sel, rep)
+        if dataset_id is None:
+            st.error("Dataset introuvable dans data.db. Relancez populate_datasets.py pour recréer le catalogue.")
+        else:
+            render_dataset_workplan(sel, rep)
+            st.divider()
+            render_column_dictionary(sel, rep)
+            st.divider()
+            render_dataset_detail(dd.ROOT / "data.db", dataset_id, key_prefix=f"ds_{sel}")
 
 # ═════════════════════════ 2b. OUTLIERS & BRUIT ═════════════════════════
 if 8 in tabs:
     with tabs[8]:
-        render_outliers_noise(rep, sel)
-        plots_carousel(["outliers", "noise"])
+        if sel == "electricalload":
+            render_electrical_outliers_noise(rep, sel)
+        else:
+            render_outliers_noise(rep, sel)
+        plots_carousel(["outliers", "noise", "quality"])
 
 # ═════════════════════════ CORRÉLATIONS & DISTRIBUTIONS ═════════════════════════
 if 9 in tabs:
     with tabs[9]:
-        correlation_panel(rep, sel)
+        if sel == "electricalload":
+            render_electrical_correlation(rep, sel)
+        else:
+            correlation_panel(rep, sel)
         plots_carousel(["correlation"], "Graphiques · Corrélations",
                        skip=("correlation_pearson", "correlation_spearman"))
 if 10 in tabs:
     with tabs[10]:
-        plots_carousel(["kde"], "Graphiques · Distributions")
-        plots_carousel(["monthly_trends"], "Graphiques · Tendances mensuelles")
+        plots_carousel(["kde", "distribution"], "Graphiques · Distributions")
+        plots_carousel(["monthly_trends", "trends"], "Graphiques · Tendances mensuelles")
