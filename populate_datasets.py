@@ -73,15 +73,29 @@ def populate():
     con = sqlite3.connect(DB_PATH)
     con.executescript(SCHEMA)
 
-    # Clear existing datasets to avoid duplicates on re-run
-    con.execute("DELETE FROM datasets")
-    con.commit()
+    marker = EXTRACTED_ROOT / "_APERCU_ONLY.txt"
+    if marker.exists():
+        print("datasets_extracted/ contient des aperçus de 50 lignes reconstruits depuis data.db,")
+        print("pas les jeux bruts. Remplacez-les par les vrais fichiers puis supprimez _APERCU_ONLY.txt.")
+        print("Catalogue data.db conservé (aucune suppression).")
+        con.close()
+        return
 
     all_files = sorted(
         f for f in EXTRACTED_ROOT.rglob("*")
         if f.is_file() and f.suffix.lower() in [".csv", ".xlsx", ".xls"]
     )
+    if not all_files:
+        print(f"Aucun fichier CSV/XLSX trouvé dans {EXTRACTED_ROOT}.")
+        print("Le catalogue existant de data.db est conservé (aucune suppression effectuée).")
+        con.close()
+        return
+
     print(f"Found {len(all_files)} datasets to process.")
+
+    # Clear existing datasets to avoid duplicates on re-run (only when we have something to insert)
+    con.execute("DELETE FROM datasets")
+    con.commit()
 
     inserted = 0
     now = datetime.now(timezone.utc).isoformat()

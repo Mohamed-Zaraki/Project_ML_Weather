@@ -2,7 +2,7 @@
 
 Chaque carte montre l'illustration représentative du problème ; le bouton « Ouvrir » sélectionne le dataset.
 Pour utiliser vos propres images : déposez assets/datasets/<clé>.png|jpg|webp|svg
-(clés : weather, covid, parkinson, alcohol, heart) ; elles remplaceront automatiquement ces illustrations.
+(clés : weather, covid, parkinson, alcohol, heart, electricalload) ; elles remplaceront automatiquement ces illustrations.
 """
 from __future__ import annotations
 
@@ -186,6 +186,29 @@ _ART = {
         '<text x="44" y="22" fill="#94A3B8" font-family="sans-serif" font-size="9">BPM</text>'
         '<circle cx="62" cy="12" r="3" fill="#EF4444"/>'
         '</g>'
+    ),
+
+    # ── CHARGE ÉLECTRIQUE : pylône, lignes haute tension, éclair & courbe DEMAND ──
+    "electricalload": (
+        "#082F49", "#0E7490",
+        # Lignes haute tension
+        '<g stroke="#67E8F9" stroke-width="1.5" opacity=".5">'
+        '<path d="M-10 70 Q200 105 410 70"/><path d="M-10 82 Q200 120 410 82"/>'
+        '<path d="M-10 94 Q200 135 410 94"/></g>'
+        # Pylône
+        '<g stroke="#E2E8F0" stroke-width="3" fill="none" opacity=".9">'
+        '<path d="M175 190 L205 40 L235 190 M182 145 L228 145 M188 108 L222 108 M194 75 L216 75"/>'
+        '<path d="M175 190 L235 190 M185 145 L195 108 L205 75 L215 108 L225 145"/>'
+        '</g>'
+        # Éclair / pic de demande
+        '<polygon points="120,55 95,115 116,115 100,175 150,100 126,100 143,55"'
+        ' fill="#FBBF24" opacity=".95" filter="url(#glow_electricalload)"/>'
+        # Courbe de charge (double pic journalier)
+        '<path d="M250 175 Q275 170 285 140 Q300 100 320 135 Q335 165 350 120 Q365 75 385 115 Q395 135 410 105"'
+        ' fill="none" stroke="#34D399" stroke-width="4" stroke-linecap="round"/>'
+        '<g fill="#34D399"><circle cx="320" cy="135" r="4"/><circle cx="350" cy="120" r="4"/>'
+        '<circle cx="385" cy="115" r="4"/></g>'
+        '<text x="252" y="200" fill="#A5F3FC" font-family="monospace" font-size="11" font-weight="bold">DEMAND (MW)</text>'
     ),
 }
 

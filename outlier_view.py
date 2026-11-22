@@ -9,14 +9,8 @@ import streamlit as st
 
 import dashboard_charts as ch
 import dashboard_data as dd
-from theme import attention_list, kpi_row, section_title
-
-
-def _stretch(fn, *a, **k):
-    try:
-        return fn(*a, width="stretch", **k)
-    except TypeError:
-        return fn(*a, use_container_width=True, **k)
+from outlier_noise_interpretation import render_outlier_noise_interpretation
+from theme import kpi_row, section_title
 
 
 def render_boxplot(rep: dict, key: str, max_features: int = 15) -> bool:
@@ -61,10 +55,7 @@ def render_outliers_noise(rep: dict, key: str) -> None:
          "bad" if (not nz.empty and len(noisy) / len(nz) >= .5) else "warn" if len(noisy) else "good"),
     ])
 
-    section_title("Lecture rapide", "interprétation calculée à partir des chiffres du rapport")
-    pts = dd.outlier_noise_points(rep)
-    if pts:
-        attention_list(pts)
+    render_outlier_noise_interpretation(rep, key)
 
     section_title("Boxplots", "valeurs extrêmes par variable")
     if not render_boxplot(rep, key):
@@ -84,13 +75,6 @@ def render_outliers_noise(rep: dict, key: str) -> None:
             st.info("Pas de données de bruit.")
         else:
             st.altair_chart(ch.noise_ratio(nz))
-
-    section_title("Interprétation par variable", "ce que disent les outliers et le bruit, et quoi faire")
-    interp = dd.interpret_variables(rep)
-    if interp.empty:
-        st.info("Rien à interpréter.")
-    else:
-        _stretch(st.dataframe, interp, hide_index=True)
 
     notes = [t for sec in ("outliers", "noise") for t in ((rep.get(sec, {}) or {}).get("insights") or [])]
     if notes:
